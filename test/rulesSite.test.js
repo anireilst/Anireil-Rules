@@ -148,6 +148,6 @@ test('article structure and A4 print styles stay in the graphite theme', () => {
   assert.match(css, /GRAPHITE DOCUMENT STRUCTURE \/ ADVANCED SEARCH \/ PRINT/);
   assert.match(css, /\.chapter-heading\s*\{[\s\S]*?grid-template-columns:\s*auto minmax\(0, 1fr\) auto;/s);
   assert.match(css, /@page\s*\{[\s\S]*?size:\s*A4;/s);
-  assert.match(css, /@media print\s*\{[\s\S]*?\.article-card\s*\{[\s\S]*?break-inside:\s*avoid;/s);
+  assert.match(css, /@media print\s*\{[\s\S]*?\.article-card[\s\S]*?break-inside:\s*avoid;/s);
   assert.match(css, /--bg:\s*#23272b/);
 });
