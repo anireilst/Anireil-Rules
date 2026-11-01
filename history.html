@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#30353a">
+  <meta name="description" content="История редакций Конституции, Кодекса и Индекса запретов Anireil.">
+  <title>История изменений — Anireil Rules</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="history-page">
+  <a class="skip-link" href="#historyContent">Перейти к истории редакций</a>
+
+  <div class="ambient ambient-left" aria-hidden="true"></div>
+  <div class="ambient ambient-right" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="./index.html#constitution" aria-label="Anireil Rules — к документам">
+      <span class="brand-mark" aria-hidden="true">A<span></span></span>
+      <span class="brand-copy">
+        <strong>ANIREIL</strong>
+        <small>RULES ARCHIVE</small>
+      </span>
+    </a>
+
+    <nav class="desktop-doc-nav" aria-label="Документы">
+      <a href="./index.html#constitution">Конституция</a>
+      <a href="./index.html#codex">Кодекс</a>
+      <a href="./index.html#prohibitions">Индекс</a>
+      <a href="./history.html" class="active" aria-current="page">История</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <a class="topbar-button history-back-button" href="./index.html">К документам</a>
+    </div>
+  </header>
+
+  <main id="historyContent" class="history-shell">
+    <section class="history-hero" aria-labelledby="historyTitle">
+      <div class="history-hero-copy">
+        <span class="section-kicker">ANIREIL / CHANGELOG</span>
+        <h1 id="historyTitle">История изменений</h1>
+        <p>
+          Архив редакций Конституции, Кодекса и Индекса запретов.
+          Новые записи появляются автоматически после обновления официальных правил в Anireil-Bot.
+        </p>
+        <div class="history-source-line">
+          <span class="history-source-dot" aria-hidden="true"></span>
+          Официальный источник: Anireil-Bot / rules
+        </div>
+      </div>
+
+      <aside class="history-hero-aside" aria-label="Состояние архива">
+        <span class="history-aside-label">ДОКУМЕНТОВ В АРХИВЕ</span>
+        <strong id="historyDocumentCount">—</strong>
+        <span>отслеживаются автоматически</span>
+        <p id="historyLastSync">Загружаем сведения об архиве...</p>
+      </aside>
+    </section>
+
+    <section class="history-workspace" aria-labelledby="historySectionTitle">
+      <div class="history-section-heading">
+        <div>
+          <span class="section-kicker">REVISION REGISTER</span>
+          <h2 id="historySectionTitle">Журнал редакций</h2>
+          <p>Выбери документ, чтобы посмотреть его редакции, изменения и сохранённые тексты.</p>
+        </div>
+
+        <label class="history-filter" for="historyDocumentFilter">
+          <span>Документ</span>
+          <select id="historyDocumentFilter">
+            <option value="constitution">Конституция</option>
+            <option value="codex">Кодекс</option>
+            <option value="prohibitions">Индекс запретов</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="historyStats" class="history-stats" aria-live="polite"></div>
+      <div id="historyTimeline" class="history-timeline"></div>
+
+      <div id="historyStatus" class="state-card" hidden role="status" aria-live="polite"></div>
+    </section>
+
+    <footer class="history-footer">
+      <a href="./index.html">Вернуться к документам Anireil</a>
+      <span>Архив фиксирует опубликованные редакции и не изменяет действующие правила.</span>
+    </footer>
+  </main>
+
+  <script src="./history.js" defer></script>
+</body>
+</html>
