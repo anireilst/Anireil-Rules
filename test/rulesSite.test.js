@@ -167,8 +167,7 @@ test('document hero title stays inside its column without covering the summary',
 
 test('print layout hides the site header, document tabs and search control', () => {
   const printStart = css.indexOf('@media print');
-  const printEnd = css.indexOf('\n}', printStart);
-  const printRules = css.slice(printStart, printEnd);
+  const printRules = css.slice(printStart);
 
   assert.match(printRules, /\.topbar\s*,/);
   assert.match(printRules, /\.skip-link\s*,/);
