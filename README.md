@@ -108,3 +108,14 @@ is complete.
 GitHub's official guides:
 - [Fine-grained personal access tokens](https://docs.github.com/en/enterprise-cloud@latest/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 - [Repository Actions secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
+
+## Revision history
+
+The archive keeps an immutable snapshot for every published edition of each document.
+The history page shows the current edition, publication date, article-level changes and
+the full text of previous editions. The first saved snapshot is the starting point of
+the archive; changes from before that date are not reconstructed.
+
+The synchronization script creates a new edition only when that document's content
+changes. Unchanged documents keep their edition number and publication date. The sync
+workflow publishes the rules index, revision log and new snapshots together.

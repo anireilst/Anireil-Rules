@@ -471,7 +471,24 @@ function renderCurrentDocument() {
   elements.articleCount.textContent = totalArticles.toLocaleString('ru-RU');
   elements.sectionCount.textContent = sections.length.toLocaleString('ru-RU');
 
-  if (meta.version) {
+  const publication = state.data.meta.publication &&
+    state.data.meta.publication.documents &&
+    state.data.meta.publication.documents[state.currentDocument];
+
+  if (publication) {
+    const updatedAt = new Date(publication.updatedAt);
+    const dateLabel = Number.isNaN(updatedAt.getTime())
+      ? ''
+      : updatedAt.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+    elements.documentVersion.textContent =
+      'Редакция ' + publication.edition + (dateLabel ? ' · ' + dateLabel : '');
+    elements.documentVersion.hidden = false;
+  } else if (meta.version) {
     elements.documentVersion.textContent = 'Редакция ' + meta.version;
     elements.documentVersion.hidden = false;
   } else {

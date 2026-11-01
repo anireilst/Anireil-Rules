@@ -5,7 +5,7 @@
   "description": "Official responsive rules archive for Anireil",
   "scripts": {
     "test": "node --test",
-    "check": "node --check app.js && node --check scripts/sync-rules.js",
+    "check": "node --check app.js && node --check history.js && node --check scripts/rules-history.js && node --check scripts/sync-rules.js",
     "sync": "node scripts/sync-rules.js ./source-bot",
     "sync:check": "node scripts/sync-rules.js ./source-bot --check"
   },

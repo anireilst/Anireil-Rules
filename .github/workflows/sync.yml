@@ -55,22 +55,24 @@ jobs:
         id: changes
         shell: bash
         run: |
-          if git diff --quiet -- data/rules.json; then
+          if [ -z "$(git status --porcelain -- data)" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Prepare isolated snapshot artifact
+      - name: Prepare isolated rules and history artifact
         if: steps.changes.outputs.changed == 'true'
-        run: cp data/rules.json rules-snapshot.json
+        run: |
+          mkdir -p sync-artifact
+          cp -a data sync-artifact/data
 
-      - name: Upload synchronized snapshot
+      - name: Upload synchronized archive
         if: steps.changes.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: rules-snapshot
-          path: rules-snapshot.json
+          name: rules-archive
+          path: sync-artifact/data
           if-no-files-found: error
           retention-days: 1
 
@@ -93,17 +95,19 @@ jobs:
       - name: Download synchronized snapshot
         uses: actions/download-artifact@v4
         with:
-          name: rules-snapshot
+          name: rules-archive
           path: sync-artifact
 
-      - name: Replace published rules data
-        run: cp sync-artifact/rules-snapshot.json data/rules.json
+      - name: Replace published rules archive
+        run: |
+          mkdir -p data
+          cp -a sync-artifact/data/. data/
 
-      - name: Commit synchronized rules
+      - name: Commit synchronized rules and history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/rules.json
+          git add data/
           git commit -m "chore(rules): sync official documents from Anireil-Bot"
           git push
 
