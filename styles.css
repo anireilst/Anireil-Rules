@@ -2685,3 +2685,280 @@ body::before {
   }
 }
 
+/* === DEEP GRAPHITE / TRUE DARK GRAY === */
+/* Final visual layer: neutral dark gray, no white-glass surfaces and no purple tint. */
+:root {
+  color-scheme: dark;
+  --bg: #23272b;
+  --bg-deep: #1f2326;
+  --panel: rgba(45, 50, 54, 0.96);
+  --panel-soft: rgba(50, 55, 60, 0.94);
+  --panel-strong: rgba(55, 61, 66, 0.98);
+  --line: rgba(190, 198, 204, 0.09);
+  --line-strong: rgba(190, 198, 204, 0.20);
+  --text: #e7eaec;
+  --muted: #a9b0b6;
+  --muted-2: #858e95;
+  --accent: #9aa4ac;
+  --accent-soft: #bec5ca;
+  --shadow: 0 24px 70px rgba(12, 14, 16, 0.30);
+}
+
+html {
+  background: #23272b;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 44% 34% at 88% 8%, rgba(118, 127, 135, 0.07), transparent 72%),
+    radial-gradient(ellipse 38% 46% at -10% 46%, rgba(93, 102, 110, 0.06), transparent 76%),
+    linear-gradient(180deg, #2a2f33 0%, #252a2e 48%, #22262a 100%);
+}
+
+body::before {
+  opacity: 0.13;
+  background-image:
+    linear-gradient(to right, rgba(177, 185, 191, 0.026) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(177, 185, 191, 0.026) 1px, transparent 1px);
+}
+
+.ambient {
+  opacity: 0.06;
+  filter: blur(155px);
+}
+
+.ambient-left {
+  background: #707981;
+}
+
+.ambient-right {
+  background: #5f6870;
+}
+
+.topbar {
+  border-color: rgba(192, 199, 205, 0.085);
+  background: rgba(40, 45, 49, 0.94);
+  box-shadow:
+    0 16px 44px rgba(12, 14, 16, 0.26),
+    inset 0 1px rgba(174, 182, 188, 0.028);
+}
+
+.brand-mark {
+  border-color: rgba(197, 204, 209, 0.14);
+  background: linear-gradient(145deg, #5a6269, #474e54 68%, #3f464c);
+  box-shadow: inset 0 1px rgba(196, 203, 208, 0.07);
+}
+
+.brand-mark span {
+  background: #c2c8cd;
+  box-shadow: 0 0 7px rgba(184, 192, 198, 0.18);
+}
+
+.desktop-doc-nav a:hover,
+.desktop-doc-nav a.active {
+  background: rgba(164, 173, 180, 0.055);
+}
+
+.topbar-button,
+.menu-button {
+  border-color: rgba(190, 198, 204, 0.09);
+  background: rgba(159, 168, 175, 0.025);
+}
+
+.topbar-button kbd {
+  border-color: rgba(190, 198, 204, 0.08);
+  background: rgba(157, 166, 173, 0.025);
+}
+
+.topbar-button:hover,
+.menu-button:hover {
+  background: rgba(171, 180, 187, 0.055);
+}
+
+.sidebar {
+  border-color: rgba(190, 198, 204, 0.08);
+  background:
+    linear-gradient(145deg, rgba(143, 152, 159, 0.025), transparent 42%),
+    rgba(42, 47, 51, 0.96);
+  box-shadow:
+    0 18px 46px rgba(12, 14, 16, 0.24),
+    inset 0 1px rgba(181, 189, 195, 0.025);
+}
+
+.document-switcher button:hover {
+  background: rgba(167, 176, 183, 0.035);
+}
+
+.document-switcher button.active {
+  border-color: rgba(191, 198, 204, 0.11);
+  background: rgba(159, 168, 175, 0.07);
+}
+
+.toc-head span:last-child {
+  background: rgba(159, 168, 175, 0.02);
+}
+
+.toc a:hover,
+.toc a.active {
+  background: rgba(157, 166, 173, 0.04);
+}
+
+.document-hero {
+  border-color: rgba(190, 198, 204, 0.085);
+  background:
+    radial-gradient(circle at 95% 2%, rgba(127, 136, 144, 0.055), transparent 35%),
+    linear-gradient(145deg, #343a3f 0%, #30363a 55%, #2c3135 100%);
+  box-shadow:
+    0 24px 64px rgba(12, 14, 16, 0.27),
+    inset 0 1px rgba(178, 186, 192, 0.025);
+}
+
+.inline-search {
+  border-color: rgba(190, 198, 204, 0.10);
+  background: rgba(31, 35, 38, 0.54);
+  box-shadow: inset 0 1px rgba(171, 180, 186, 0.018);
+}
+
+.inline-search:focus-within {
+  border-color: rgba(196, 203, 209, 0.22);
+  background: rgba(34, 38, 42, 0.72);
+  box-shadow: 0 0 0 3px rgba(165, 174, 181, 0.045);
+}
+
+.document-summary {
+  border-color: rgba(190, 198, 204, 0.075);
+  background:
+    linear-gradient(145deg, rgba(142, 151, 158, 0.022), transparent 45%),
+    rgba(38, 43, 47, 0.70);
+  box-shadow: inset 0 1px rgba(177, 185, 191, 0.02);
+}
+
+.summary-grid > div {
+  border-color: rgba(190, 198, 204, 0.065);
+  background: rgba(157, 166, 173, 0.018);
+}
+
+.search-results,
+.reading-section {
+  border-color: rgba(190, 198, 204, 0.075);
+  background: rgba(42, 47, 51, 0.94);
+  box-shadow:
+    0 16px 40px rgba(12, 14, 16, 0.18),
+    inset 0 1px rgba(176, 184, 190, 0.018);
+}
+
+.text-button {
+  border-color: rgba(190, 198, 204, 0.085);
+  background: rgba(157, 166, 173, 0.018);
+}
+
+.text-button:hover {
+  background: rgba(168, 177, 184, 0.045);
+}
+
+.search-result {
+  border-color: rgba(190, 198, 204, 0.065);
+  background: rgba(52, 57, 61, 0.58);
+}
+
+.search-result:hover {
+  border-color: rgba(194, 201, 206, 0.12);
+  background: rgba(57, 62, 67, 0.82);
+}
+
+.state-card {
+  border-color: rgba(190, 198, 204, 0.10);
+  background: rgba(155, 164, 171, 0.014);
+}
+
+.chapter-number {
+  border-color: rgba(190, 198, 204, 0.09);
+  background: rgba(156, 165, 172, 0.025);
+}
+
+.article-card {
+  border-color: rgba(190, 198, 204, 0.06);
+  background:
+    linear-gradient(145deg, rgba(142, 151, 158, 0.018), transparent 52%),
+    rgba(50, 55, 60, 0.88);
+  box-shadow: inset 0 1px rgba(178, 186, 192, 0.016);
+}
+
+.article-card:hover {
+  border-color: rgba(195, 202, 207, 0.11);
+  background: rgba(55, 60, 65, 0.96);
+}
+
+.article-card.targeted {
+  border-color: rgba(199, 206, 211, 0.22);
+  background: rgba(58, 63, 68, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(172, 181, 187, 0.04),
+    inset 4px 0 0 #a4adb4;
+}
+
+.article-copy {
+  border-color: rgba(190, 198, 204, 0.075);
+  background: rgba(158, 167, 174, 0.018);
+}
+
+.article-copy:hover {
+  background: rgba(168, 177, 184, 0.045);
+}
+
+.sanctions {
+  border-left-color: rgba(198, 205, 210, 0.22);
+  background: rgba(157, 166, 173, 0.025);
+}
+
+.severity-badge {
+  border-color: rgba(190, 198, 204, 0.075);
+  background: rgba(157, 166, 173, 0.018);
+}
+
+.preamble-card {
+  border-color: rgba(190, 198, 204, 0.08);
+  background:
+    linear-gradient(130deg, rgba(141, 150, 157, 0.018), transparent 55%),
+    rgba(50, 55, 60, 0.62);
+}
+
+.search-dialog {
+  border-color: rgba(194, 201, 206, 0.12);
+  background:
+    radial-gradient(circle at 100% 0, rgba(122, 131, 139, 0.05), transparent 36%),
+    rgba(39, 44, 48, 0.992);
+  box-shadow:
+    0 42px 126px rgba(10, 12, 14, 0.48),
+    inset 0 1px rgba(177, 185, 191, 0.02);
+}
+
+.dialog-close {
+  border-color: rgba(190, 198, 204, 0.08);
+  background: rgba(157, 166, 173, 0.018);
+}
+
+.dialog-search {
+  border-color: rgba(190, 198, 204, 0.09);
+  background: rgba(30, 34, 37, 0.62);
+}
+
+.toast {
+  border-color: rgba(196, 203, 208, 0.10);
+  background: rgba(39, 44, 48, 0.98);
+  box-shadow: 0 18px 46px rgba(10, 12, 14, 0.34);
+}
+
+.mobile-backdrop {
+  background: rgba(15, 17, 19, 0.62);
+}
+
+@media (max-width: 1080px) {
+  .sidebar {
+    background:
+      linear-gradient(145deg, rgba(142, 151, 158, 0.02), transparent 42%),
+      rgba(42, 47, 51, 0.995);
+    box-shadow: 24px 0 68px rgba(10, 12, 14, 0.34);
+  }
+}
+
