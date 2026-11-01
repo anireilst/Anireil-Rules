@@ -84,3 +84,27 @@ documents. Unrelated bot commits do not cause unnecessary website deployments.
 - The global search dialog can filter by document, chapter/category, severity and article ID.
 - The print action formats the currently selected document for A4 printing or saving as PDF.
 - Browser and screen-reader controls remain available in the normal graphite interface.
+
+
+### One-time access setup for the private Bot repository
+
+Because `Anireil-Bot` is private, GitHub Actions in this repository needs a separate
+read-only credential to fetch its source. The normal `GITHUB_TOKEN` cannot read a
+different private repository.
+
+1. Create a **fine-grained personal access token** for the same GitHub account.
+2. Under repository access, select **Only select repositories** and choose
+   `Anireil-Bot`.
+3. Grant only **Contents: Read-only**. Leave other repository permissions disabled.
+4. In `Anireil-Rules`, open **Settings → Secrets and variables → Actions → New repository secret**.
+5. Add a secret named `BOT_REPO_READ_TOKEN` and paste the token value there.
+
+Do not put this token in source files, commits, issues or chat messages. The workflows
+pass it only to the Bot checkout step and disable credential persistence afterward.
+The regular site checks still run without the secret, but the private-source comparison
+is skipped. The scheduled sync workflow reports a clear error until this one-time setup
+is complete.
+
+GitHub's official guides:
+- [Fine-grained personal access tokens](https://docs.github.com/en/enterprise-cloud@latest/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+- [Repository Actions secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
