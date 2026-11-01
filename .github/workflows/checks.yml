@@ -11,24 +11,37 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      BOT_REPO_READ_TOKEN: ${{ secrets.BOT_REPO_READ_TOKEN }}
+
     steps:
       - name: Checkout Rules site
         uses: actions/checkout@v4
 
       - name: Checkout official Bot rules
+        if: ${{ env.BOT_REPO_READ_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
           repository: anireilst/Anireil-Bot
           ref: main
           path: source-bot
+          token: ${{ env.BOT_REPO_READ_TOKEN }}
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: rules
+
+      - name: Verify the archive matches the official source
+        if: ${{ env.BOT_REPO_READ_TOKEN != '' }}
+        run: npm run sync:check
+
+      - name: Explain skipped private source check
+        if: ${{ env.BOT_REPO_READ_TOKEN == '' }}
+        run: echo "::notice::Set the BOT_REPO_READ_TOKEN repository secret to enable private source synchronization checks."
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
-
-      - name: Verify the archive matches the official source
-        run: npm run sync:check
 
       - name: Run regression tests
         run: npm test
