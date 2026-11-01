@@ -27,6 +27,13 @@ const elements = {
   searchSummary: document.querySelector('#searchSummary'),
   clearSearch: document.querySelector('#clearSearch'),
   copyDocumentLink: document.querySelector('#copyDocumentLink'),
+  printDocument: document.querySelector('#printDocument'),
+  searchDocumentFilter: document.querySelector('#searchDocumentFilter'),
+  searchSectionFilter: document.querySelector('#searchSectionFilter'),
+  searchSeverityFilter: document.querySelector('#searchSeverityFilter'),
+  searchArticleFilter: document.querySelector('#searchArticleFilter'),
+  clearSearchFilters: document.querySelector('#clearSearchFilters'),
+  dialogSearchSummary: document.querySelector('#dialogSearchSummary'),
   searchToggle: document.querySelector('#searchToggle'),
   searchDialog: document.querySelector('#searchDialog'),
   searchDialogClose: document.querySelector('#searchDialogClose'),
@@ -407,7 +414,14 @@ function createDocumentSection(section) {
   const title = document.createElement('h3');
   title.textContent = section.title;
 
-  heading.append(chapterNumber, title);
+  const count = document.createElement('span');
+  count.className = 'chapter-article-count';
+  count.textContent = section.articles.length.toLocaleString('ru-RU') + ' ПУНКТОВ';
+  count.setAttribute('aria-label', section.articles.length + ' пунктов в разделе');
+
+  heading.append(chapterNumber, title, count);
+  sectionNode.dataset.document = state.currentDocument;
+  sectionNode.dataset.section = String(section.chapter);
 
   const list = document.createElement('div');
   list.className = 'article-list';
@@ -527,6 +541,8 @@ function buildSearchIndex() {
           documentId: doc.id,
           documentTitle: doc.shortTitle,
           sectionTitle: section.title,
+          sectionId: String(section.chapter),
+          sectionKey: doc.id + ':' + String(section.chapter),
           id: article.id,
           title: article.title,
           text: article.text,
@@ -550,11 +566,18 @@ function buildSearchIndex() {
   state.searchIndex = index;
 }
 
-function searchRules(query) {
+function searchRules(query, filters) {
   const normalizedQuery = normalize(query);
-  if (!normalizedQuery) return [];
-
   const terms = normalizedQuery.split(' ').filter(Boolean);
+  const activeFilters = filters || {};
+  const hasFilters = Boolean(
+    activeFilters.documentId ||
+    activeFilters.sectionKey ||
+    activeFilters.severity ||
+    activeFilters.articleId
+  );
+
+  if (!normalizedQuery && !hasFilters) return [];
 
   return state.searchIndex
     .map(function (item) {
@@ -562,14 +585,16 @@ function searchRules(query) {
       const id = normalize(item.id);
       const title = normalize(item.title);
 
-      if (id === normalizedQuery) score += 100;
-      if (id.startsWith(normalizedQuery)) score += 50;
-      if (title.includes(normalizedQuery)) score += 35;
+      if (normalizedQuery) {
+        if (id === normalizedQuery) score += 100;
+        if (id.startsWith(normalizedQuery)) score += 50;
+        if (title.includes(normalizedQuery)) score += 35;
 
-      for (const term of terms) {
-        if (id.includes(term)) score += 15;
-        if (title.includes(term)) score += 10;
-        if (item.haystack.includes(term)) score += 3;
+        for (const term of terms) {
+          if (id.includes(term)) score += 15;
+          if (title.includes(term)) score += 10;
+          if (item.haystack.includes(term)) score += 3;
+        }
       }
 
       const matchesAll = terms.every(function (term) {
@@ -579,10 +604,17 @@ function searchRules(query) {
       return Object.assign({}, item, { score, matchesAll });
     })
     .filter(function (item) {
-      return item.matchesAll;
+      if (!item.matchesAll) return false;
+      if (activeFilters.documentId && item.documentId !== activeFilters.documentId) return false;
+      if (activeFilters.sectionKey && item.sectionKey !== activeFilters.sectionKey) return false;
+      if (activeFilters.severity && String(item.severity || '') !== activeFilters.severity) return false;
+      if (activeFilters.articleId && !normalize(item.id).includes(normalize(activeFilters.articleId))) return false;
+      return true;
     })
     .sort(function (a, b) {
-      return b.score - a.score || a.id.localeCompare(b.id, 'ru');
+      return b.score - a.score ||
+        a.documentTitle.localeCompare(b.documentTitle, 'ru') ||
+        a.id.localeCompare(b.id, 'ru');
     })
     .slice(0, 40);
 }
@@ -654,21 +686,84 @@ function renderInlineSearch(query) {
   });
 }
 
+function getAdvancedSearchFilters() {
+  return {
+    documentId: elements.searchDocumentFilter.value,
+    sectionKey: elements.searchSectionFilter.value,
+    severity: elements.searchSeverityFilter.value,
+    articleId: elements.searchArticleFilter.value
+  };
+}
+
+function renderSearchSectionFilter() {
+  if (!state.data) return;
+
+  const selectedDocument = elements.searchDocumentFilter.value;
+  const previousValue = elements.searchSectionFilter.value;
+  const options = [];
+
+  state.data.meta.documents.forEach(function (doc) {
+    if (selectedDocument && doc.id !== selectedDocument) return;
+
+    getDocumentSections(doc.id).forEach(function (section) {
+      options.push({
+        value: doc.id + ':' + String(section.chapter),
+        label: selectedDocument ? section.title : doc.shortTitle + ' — ' + section.title
+      });
+    });
+  });
+
+  elements.searchSectionFilter.replaceChildren();
+
+  const allOption = document.createElement('option');
+  allOption.value = '';
+  allOption.textContent = 'Все главы и категории';
+  elements.searchSectionFilter.append(allOption);
+
+  options.forEach(function (item) {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.textContent = item.label;
+    elements.searchSectionFilter.append(option);
+  });
+
+  elements.searchSectionFilter.value = options.some(function (item) {
+    return item.value === previousValue;
+  }) ? previousValue : '';
+}
+
 function renderDialogSearch(query) {
-  const results = searchRules(query);
+  const filters = getAdvancedSearchFilters();
+  const hasCriteria = Boolean(
+    normalize(query) ||
+    filters.documentId ||
+    filters.sectionKey ||
+    filters.severity ||
+    normalize(filters.articleId)
+  );
+  const results = searchRules(query, filters);
+
   elements.dialogSearchResults.replaceChildren();
 
-  if (!normalize(query)) return;
+  if (!hasCriteria) {
+    elements.dialogSearchSummary.textContent =
+      'Поиск по документам, главам, категориям, уровням и номерам статей.';
+    return;
+  }
+
+  elements.dialogSearchSummary.textContent =
+    'Найдено ' + results.length.toLocaleString('ru-RU') + ' ' +
+    pluralize(results.length, 'результат', 'результата', 'результатов');
 
   if (!results.length) {
     const empty = document.createElement('div');
     empty.className = 'state-card';
-    empty.textContent = 'Ничего не найдено.';
+    empty.textContent = 'Ничего не найдено. Измени запрос или ослабь фильтры.';
     elements.dialogSearchResults.append(empty);
     return;
   }
 
-  results.slice(0, 18).forEach(function (item) {
+  results.slice(0, 24).forEach(function (item) {
     elements.dialogSearchResults.append(createSearchResult(item));
   });
 }
@@ -716,6 +811,8 @@ function handleRoute() {
 }
 
 function openSearchDialog() {
+  if (state.data) renderSearchSectionFilter();
+
   if (!elements.searchDialog.open) {
     elements.searchDialog.showModal();
   }
@@ -751,9 +848,38 @@ elements.dialogSearchInput.addEventListener('input', function (event) {
   renderDialogSearch(event.target.value);
 });
 
+elements.searchDocumentFilter.addEventListener('change', function () {
+  renderSearchSectionFilter();
+  renderDialogSearch(elements.dialogSearchInput.value);
+});
+
+elements.searchSectionFilter.addEventListener('change', function () {
+  renderDialogSearch(elements.dialogSearchInput.value);
+});
+
+elements.searchSeverityFilter.addEventListener('change', function () {
+  renderDialogSearch(elements.dialogSearchInput.value);
+});
+
+elements.searchArticleFilter.addEventListener('input', function () {
+  renderDialogSearch(elements.dialogSearchInput.value);
+});
+
+elements.clearSearchFilters.addEventListener('click', function () {
+  elements.searchDocumentFilter.value = '';
+  elements.searchSeverityFilter.value = '';
+  elements.searchArticleFilter.value = '';
+  renderSearchSectionFilter();
+  renderDialogSearch(elements.dialogSearchInput.value);
+});
+
 elements.copyDocumentLink.addEventListener('click', function () {
   const value = window.location.origin + window.location.pathname + '#' + state.currentDocument;
   copyText(value, 'Ссылка на документ скопирована');
+});
+
+elements.printDocument.addEventListener('click', function () {
+  window.print();
 });
 
 elements.menuToggle.addEventListener('click', function () {
@@ -799,6 +925,7 @@ async function loadRules() {
 
     state.data = await response.json();
     buildSearchIndex();
+    renderSearchSectionFilter();
 
     const route = parseRoute();
     state.currentDocument = route.document;
