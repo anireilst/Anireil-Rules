@@ -316,8 +316,10 @@ function renderRevision(documentHistory, revision, index) {
       snapshotButton.textContent = 'Скрыть редакцию';
     } catch (error) {
       snapshotViewer.replaceChildren(createElement('p', 'history-snapshot-error', error.message));
-      snapshotButton.textContent = 'Повторить загрузку';
       snapshotViewer.dataset.loaded = '';
+      snapshotViewer.hidden = true;
+      snapshotButton.setAttribute('aria-expanded', 'false');
+      snapshotButton.textContent = 'Повторить загрузку';
     } finally {
       snapshotButton.disabled = false;
     }
