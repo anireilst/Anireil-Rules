@@ -2,9 +2,12 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { buildHistory } = require('./rules-history');
 
 const projectRoot = path.resolve(__dirname, '..');
-const dataPath = path.join(projectRoot, 'data', 'rules.json');
+const dataDirectory = path.join(projectRoot, 'data');
+const dataPath = path.join(dataDirectory, 'rules.json');
+const historyPath = path.join(dataDirectory, 'history.json');
 const sourceRoot = path.resolve(process.argv[2] || path.join(projectRoot, 'source-bot'));
 const checkOnly = process.argv.includes('--check');
 
@@ -141,28 +144,86 @@ function buildSnapshot(existingData) {
   };
 }
 
-function main() {
-  const existingData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  const generatedData = buildSnapshot(existingData);
-  const generatedText = JSON.stringify(generatedData, null, 2) + '\n';
-  const currentText = fs.readFileSync(dataPath, 'utf8');
+function readJson(filePath, label) {
+  if (!fs.existsSync(filePath)) return null;
 
-  if (currentText === generatedText) {
-    console.log('Rules archive is already synchronized.');
-    return;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    throw new Error(label + ' is not valid JSON: ' + error.message);
+  }
+}
+
+function main() {
+  const existingData = readJson(dataPath, 'data/rules.json');
+  if (!existingData) throw new Error('data/rules.json is missing.');
+
+  const existingHistory = readJson(historyPath, 'data/history.json');
+  const generatedData = buildSnapshot(existingData);
+  const historyResult = buildHistory(
+    existingHistory,
+    existingData,
+    generatedData,
+    new Date().toISOString()
+  );
+
+  generatedData.meta.publication = historyResult.publication;
+
+  const outputs = new Map([
+    [dataPath, JSON.stringify(generatedData, null, 2) + '\n'],
+    [historyPath, JSON.stringify(historyResult.history, null, 2) + '\n']
+  ]);
+
+  for (const [relativePath, content] of Object.entries(historyResult.snapshots)) {
+    outputs.set(path.join(projectRoot, relativePath), content);
+  }
+
+  const missingSnapshots = [];
+  for (const document of Object.values(historyResult.history.documents)) {
+    for (const revision of document.revisions) {
+      const snapshotPath = path.join(projectRoot, revision.snapshot);
+      if (!outputs.has(snapshotPath) && !fs.existsSync(snapshotPath)) {
+        missingSnapshots.push(revision.snapshot);
+      }
+    }
+  }
+
+  if (missingSnapshots.length) {
+    throw new Error(
+      'Historical snapshot files are missing: ' + missingSnapshots.join(', ') +
+      '. Restore the archived files before synchronizing.'
+    );
+  }
+
+  const mismatches = [];
+  for (const [filePath, content] of outputs) {
+    const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
+    if (current !== content) mismatches.push(path.relative(projectRoot, filePath));
   }
 
   if (checkOnly) {
-    console.error(
-      'Rules archive is out of sync with Anireil-Bot. ' +
-      'Run node scripts/sync-rules.js ./source-bot to refresh it.'
-    );
-    process.exitCode = 1;
+    if (mismatches.length) {
+      console.error(
+        'Rules archive or revision history is out of sync: ' + mismatches.join(', ') +
+        '. Run npm run sync to refresh it.'
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log('Rules archive and revision history match Anireil-Bot.');
     return;
   }
 
-  fs.writeFileSync(dataPath, generatedText, 'utf8');
-  console.log('Updated data/rules.json from anireilst/Anireil-Bot.');
+  for (const [filePath, content] of outputs) {
+    const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
+    if (current === content) continue;
+
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf8');
+  }
+
+  console.log('Updated rules archive and revision history from anireilst/Anireil-Bot.');
 }
 
 try {
