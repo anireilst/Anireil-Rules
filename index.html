@@ -39,6 +39,13 @@
         <span>Поиск</span>
         <kbd>/</kbd>
       </button>
+      <button id="bookmarksToggle" class="topbar-button bookmarks-toggle" type="button" aria-haspopup="dialog" aria-controls="bookmarkDialog">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <path d="M7.25 3.75h9.5A1.75 1.75 0 0 1 18.5 5.5v15l-6.5-4-6.5 4v-15a1.75 1.75 0 0 1 1.75-1.75Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+        <span class="bookmarks-label">Закладки</span>
+        <span id="bookmarksCount" class="bookmark-count" aria-hidden="true">0</span>
+      </button>
       <button id="menuToggle" class="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Открыть оглавление">
         <span></span><span></span><span></span>
       </button>
@@ -66,6 +73,14 @@
           <small>Архив редакций документов</small>
         </span>
       </a>
+
+      <button id="bookmarksSidebarToggle" class="sidebar-history-link sidebar-bookmarks-link" type="button" aria-haspopup="dialog" aria-controls="bookmarkDialog">
+        <span class="sidebar-history-mark" aria-hidden="true">S</span>
+        <span>
+          <strong>Закладки</strong>
+          <small id="bookmarkSidebarCount">0 сохранено</small>
+        </span>
+      </button>
 
       <div class="sidebar-divider"></div>
 
@@ -232,8 +247,26 @@
     </div>
   </dialog>
 
+  <dialog id="bookmarkDialog" class="search-dialog bookmark-dialog" aria-labelledby="bookmarkDialogTitle">
+    <div class="search-dialog-shell bookmark-dialog-shell">
+      <div class="search-dialog-head">
+        <div>
+          <span class="section-kicker">SAVED / LOCAL BOOKMARKS</span>
+          <h2 id="bookmarkDialogTitle">Сохранённые статьи</h2>
+        </div>
+        <button id="bookmarkDialogClose" class="dialog-close" type="button" aria-label="Закрыть закладки">Закрыть</button>
+      </div>
+
+      <p id="bookmarkSummary" class="bookmark-summary" aria-live="polite">
+        Сохранённые статьи доступны только в этом браузере.
+      </p>
+      <div id="bookmarkList" class="bookmark-list"></div>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
 
+  <script src="./bookmark-store.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>

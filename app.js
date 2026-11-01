@@ -1,8 +1,11 @@
+const bookmarkStore = window.AnireilBookmarks;
+
 const state = {
   data: null,
   currentDocument: 'constitution',
   currentArticle: null,
   searchIndex: [],
+  bookmarks: [],
   observer: null
 };
 
@@ -39,6 +42,14 @@ const elements = {
   searchDialogClose: document.querySelector('#searchDialogClose'),
   dialogSearchInput: document.querySelector('#dialogSearchInput'),
   dialogSearchResults: document.querySelector('#dialogSearchResults'),
+  bookmarksToggle: document.querySelector('#bookmarksToggle'),
+  bookmarksCount: document.querySelector('#bookmarksCount'),
+  bookmarksSidebarToggle: document.querySelector('#bookmarksSidebarToggle'),
+  bookmarkSidebarCount: document.querySelector('#bookmarkSidebarCount'),
+  bookmarkDialog: document.querySelector('#bookmarkDialog'),
+  bookmarkDialogClose: document.querySelector('#bookmarkDialogClose'),
+  bookmarkSummary: document.querySelector('#bookmarkSummary'),
+  bookmarkList: document.querySelector('#bookmarkList'),
   menuToggle: document.querySelector('#menuToggle'),
   sidebar: document.querySelector('#sidebar'),
   sidebarClose: document.querySelector('#sidebarClose'),
@@ -325,6 +336,270 @@ function showToast(message) {
   }, 2200);
 }
 
+function isBookmarked(documentId, articleId) {
+  return state.bookmarks.some(function (item) {
+    return item.documentId === documentId && item.articleId === articleId;
+  });
+}
+
+function createBookmarkIcon(saved) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute(
+    'd',
+    'M7.25 3.75h9.5A1.75 1.75 0 0 1 18.5 5.5v15l-6.5-4-6.5 4v-15a1.75 1.75 0 0 1 1.75-1.75Z'
+  );
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '1.6');
+  path.setAttribute('stroke-linejoin', 'round');
+  path.setAttribute('fill', saved ? 'currentColor' : 'none');
+
+  svg.append(path);
+  return svg;
+}
+
+function updateBookmarkButton(button) {
+  const documentId = button.dataset.documentId;
+  const articleId = button.dataset.articleId;
+  const saved = isBookmarked(documentId, articleId);
+
+  button.classList.toggle('is-saved', saved);
+  button.setAttribute('aria-pressed', String(saved));
+  button.setAttribute(
+    'aria-label',
+    (saved ? 'Удалить из закладок статью ' : 'Сохранить в закладки статью ') + articleId
+  );
+  button.title = saved ? 'Удалить из закладок' : 'Добавить в закладки';
+  button.replaceChildren(createBookmarkIcon(saved));
+}
+
+function updateBookmarkControls() {
+  const count = state.bookmarks.length;
+  const countText = count > 99 ? '99+' : String(count);
+
+  elements.bookmarksCount.textContent = countText;
+  elements.bookmarkSidebarCount.textContent =
+    count + ' ' + pluralize(count, 'статья сохранена', 'статьи сохранено', 'статей сохранено');
+  elements.bookmarksToggle.setAttribute(
+    'aria-label',
+    'Открыть закладки. Сохранено: ' + count
+  );
+  elements.bookmarksToggle.title = 'Сохранённые статьи: ' + count;
+
+  document.querySelectorAll('.article-bookmark').forEach(updateBookmarkButton);
+}
+
+function persistBookmarks(bookmarks) {
+  try {
+    const result = bookmarkStore.write(window.localStorage, bookmarks);
+
+    if (!result.ok) {
+      showToast('Не удалось сохранить закладку в этом браузере');
+      return false;
+    }
+
+    state.bookmarks = result.bookmarks;
+    updateBookmarkControls();
+
+    if (elements.bookmarkDialog.open) {
+      renderBookmarkDialog();
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[Anireil Rules] Bookmark storage is unavailable:', error);
+    showToast('Хранилище браузера недоступно. Закладка не сохранена');
+    return false;
+  }
+}
+
+function toggleBookmark(documentId, articleId) {
+  const article = state.searchIndex.find(function (item) {
+    return item.documentId === documentId && item.id === articleId;
+  });
+  const meta = getDocumentMeta(documentId);
+
+  const result = bookmarkStore.toggle(
+    state.bookmarks,
+    {
+      documentId,
+      articleId,
+      documentTitle: meta ? meta.shortTitle : documentId,
+      articleTitle: article ? article.title : ''
+    },
+    new Date().toISOString()
+  );
+
+  if (!result.ok) {
+    showToast('Не удалось добавить эту статью в закладки');
+    return;
+  }
+
+  if (!persistBookmarks(result.bookmarks)) return;
+
+  showToast(
+    result.added
+      ? 'Статья ' + articleId + ' добавлена в закладки'
+      : 'Статья ' + articleId + ' удалена из закладок'
+  );
+}
+
+function loadBookmarkState() {
+  try {
+    const result = bookmarkStore.read(window.localStorage);
+    state.bookmarks = result.bookmarks;
+
+    if (!result.ok) {
+      console.warn('[Anireil Rules] Saved bookmarks could not be read:', result.error);
+    }
+  } catch (error) {
+    state.bookmarks = [];
+    console.warn('[Anireil Rules] Bookmark storage is unavailable:', error);
+  }
+
+  updateBookmarkControls();
+}
+
+function createBookmarkEntry(bookmark) {
+  const article = state.searchIndex.find(function (item) {
+    return item.documentId === bookmark.documentId && item.id === bookmark.articleId;
+  });
+  const entry = document.createElement('article');
+  entry.className = 'bookmark-entry';
+
+  const openButton = document.createElement('button');
+  openButton.type = 'button';
+  openButton.className = 'bookmark-entry-open';
+  openButton.disabled = !article;
+
+  const heading = document.createElement('span');
+  heading.className = 'bookmark-entry-heading';
+
+  const id = document.createElement('span');
+  id.className = 'bookmark-entry-id';
+  id.textContent = bookmark.articleId;
+
+  const context = document.createElement('span');
+  context.className = 'bookmark-entry-context';
+  context.textContent =
+    (article ? article.documentTitle : bookmark.documentTitle || bookmark.documentId) +
+    (article ? ' / ' + article.sectionTitle : ' / отсутствует в текущей редакции');
+
+  heading.append(id, context);
+
+  const title = document.createElement('strong');
+  title.className = 'bookmark-entry-title';
+  title.textContent = article
+    ? article.title
+    : bookmark.articleTitle || 'Статья больше не найдена';
+
+  openButton.append(heading, title);
+
+  if (article) {
+    const excerpt = document.createElement('p');
+    excerpt.className = 'bookmark-entry-excerpt';
+    excerpt.textContent = article.text.length > 150
+      ? article.text.slice(0, 147) + '...'
+      : article.text;
+    openButton.append(excerpt);
+
+    openButton.addEventListener('click', function () {
+      elements.bookmarkDialog.close();
+      elements.inlineSearch.value = '';
+      renderInlineSearch('');
+      setRoute(bookmark.documentId, bookmark.articleId);
+    });
+  } else {
+    const unavailable = document.createElement('p');
+    unavailable.className = 'bookmark-entry-unavailable';
+    unavailable.textContent = 'Статья удалена или больше не входит в текущую редакцию. Закладку можно удалить.';
+    openButton.append(unavailable);
+  }
+
+  const removeButton = document.createElement('button');
+  removeButton.type = 'button';
+  removeButton.className = 'bookmark-entry-remove';
+  removeButton.textContent = 'Удалить';
+  removeButton.setAttribute('aria-label', 'Удалить закладку ' + bookmark.articleId);
+  removeButton.addEventListener('click', function () {
+    const next = state.bookmarks.filter(function (item) {
+      return !(
+        item.documentId === bookmark.documentId &&
+        item.articleId === bookmark.articleId
+      );
+    });
+
+    if (persistBookmarks(next)) {
+      showToast('Закладка ' + bookmark.articleId + ' удалена');
+    }
+  });
+
+  entry.append(openButton, removeButton);
+  return entry;
+}
+
+function renderBookmarkDialog() {
+  elements.bookmarkList.replaceChildren();
+
+  const bookmarks = state.bookmarks
+    .slice()
+    .sort(function (a, b) {
+      return Date.parse(b.savedAt) - Date.parse(a.savedAt);
+    });
+
+  elements.bookmarkSummary.textContent =
+    'Сохранено ' + bookmarks.length.toLocaleString('ru-RU') + ' ' +
+    pluralize(bookmarks.length, 'статья', 'статьи', 'статей') +
+    '. Список хранится только в этом браузере.';
+
+  if (!bookmarks.length) {
+    const empty = document.createElement('div');
+    empty.className = 'bookmark-empty';
+
+    const title = document.createElement('strong');
+    title.textContent = 'Пока нет сохранённых статей';
+
+    const description = document.createElement('p');
+    description.textContent =
+      'Нажми на значок закладки рядом с любой статьёй, чтобы добавить её сюда.';
+
+    empty.append(title, description);
+    elements.bookmarkList.append(empty);
+    return;
+  }
+
+  bookmarks.forEach(function (bookmark) {
+    elements.bookmarkList.append(createBookmarkEntry(bookmark));
+  });
+}
+
+function openBookmarkDialog() {
+  closeMobileSidebar();
+  renderBookmarkDialog();
+
+  if (!elements.bookmarkDialog.open) {
+    elements.bookmarkDialog.showModal();
+  }
+}
+
+function createBookmarkButton(documentId, articleId) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'article-bookmark';
+  button.dataset.documentId = documentId;
+  button.dataset.articleId = articleId;
+
+  button.addEventListener('click', function () {
+    toggleBookmark(documentId, articleId);
+  });
+
+  updateBookmarkButton(button);
+  return button;
+}
+
 function createArticleCard(article) {
   const card = document.createElement('article');
   card.className = 'article-card';
@@ -359,7 +634,14 @@ function createArticleCard(article) {
     );
   });
 
-  head.append(titleWrap, copy);
+  const actions = document.createElement('div');
+  actions.className = 'article-head-actions';
+  actions.append(
+    createBookmarkButton(state.currentDocument, article.id),
+    copy
+  );
+
+  head.append(titleWrap, actions);
 
   const text = document.createElement('p');
   text.textContent = article.text;
@@ -850,6 +1132,18 @@ elements.clearSearch.addEventListener('click', function () {
 });
 
 elements.searchToggle.addEventListener('click', openSearchDialog);
+elements.bookmarksToggle.addEventListener('click', openBookmarkDialog);
+elements.bookmarksSidebarToggle.addEventListener('click', openBookmarkDialog);
+
+elements.bookmarkDialogClose.addEventListener('click', function () {
+  elements.bookmarkDialog.close();
+});
+
+elements.bookmarkDialog.addEventListener('click', function (event) {
+  if (event.target === elements.bookmarkDialog) {
+    elements.bookmarkDialog.close();
+  }
+});
 
 elements.searchDialogClose.addEventListener('click', function () {
   elements.searchDialog.close();
@@ -935,12 +1229,29 @@ document.addEventListener('keydown', function (event) {
 
 window.addEventListener('hashchange', handleRoute);
 
+window.addEventListener('storage', function (event) {
+  if (event.key !== bookmarkStore.STORAGE_KEY && event.key !== null) return;
+
+  try {
+    const incoming = event.newValue ? JSON.parse(event.newValue) : [];
+    state.bookmarks = bookmarkStore.normalizeBookmarks(incoming);
+    updateBookmarkControls();
+
+    if (elements.bookmarkDialog.open) {
+      renderBookmarkDialog();
+    }
+  } catch (error) {
+    console.warn('[Anireil Rules] External bookmark update was ignored:', error);
+  }
+});
+
 async function loadRules() {
   try {
     const response = await fetch('./data/rules.json', { cache: 'no-store' });
     if (!response.ok) throw new Error('Rules data request failed');
 
     state.data = await response.json();
+    loadBookmarkState();
     buildSearchIndex();
     renderSearchSectionFilter();
 

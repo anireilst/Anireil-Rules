@@ -86,7 +86,9 @@ test('responsive site keeps all runtime hooks', () => {
     'dialogSearchInput', 'searchDocumentFilter', 'searchSectionFilter',
     'searchSeverityFilter', 'searchArticleFilter', 'dialogSearchSummary',
     'clearSearchFilters', 'printDocument', 'menuToggle', 'sidebar',
-    'mobileBackdrop', 'toast'
+    'mobileBackdrop', 'toast', 'bookmarksToggle', 'bookmarksCount',
+    'bookmarksSidebarToggle', 'bookmarkDialog', 'bookmarkDialogClose',
+    'bookmarkSummary', 'bookmarkList'
   ]) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
@@ -174,4 +176,25 @@ test('print layout hides the site header, document tabs and search control', () 
   assert.match(printRules, /\.sidebar\s*,/);
   assert.match(printRules, /\.document-switcher\s*,/);
   assert.match(printRules, /\.search-dialog\s*,/);
+});
+
+
+test('article bookmarks are persisted locally and exposed through the archive UI', () => {
+  assert.match(html, /src="\.\/bookmark-store\.js" defer/);
+  assert.match(html, /id="bookmarksToggle"/);
+  assert.match(html, /id="bookmarksSidebarToggle"/);
+  assert.match(html, /id="bookmarkDialog"/);
+  assert.match(html, /id="bookmarkList"/);
+
+  assert.match(script, /function toggleBookmark\(/);
+  assert.match(script, /function renderBookmarkDialog\(/);
+  assert.match(script, /function createBookmarkEntry\(/);
+  assert.match(script, /bookmarkStore\.read\(window\.localStorage\)/);
+  assert.match(script, /bookmarkStore\.write\(window\.localStorage, bookmarks\)/);
+  assert.match(script, /window\.addEventListener\('storage'/);
+
+  assert.match(css, /LOCAL ARTICLE BOOKMARKS/);
+  assert.match(css, /\.article-bookmark\.is-saved/);
+  assert.match(css, /\.bookmark-entry-remove/);
+  assert.match(css, /@media print[\s\S]*?\.article-bookmark\s*\{[\s\S]*?display:\s*none/s);
 });
