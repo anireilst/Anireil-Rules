@@ -23,13 +23,25 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Require read access to the private Bot repository
+        env:
+          BOT_REPO_READ_TOKEN: ${{ secrets.BOT_REPO_READ_TOKEN }}
+        run: |
+          if [ -z "$BOT_REPO_READ_TOKEN" ]; then
+            echo "::error title=Missing repository secret::Add BOT_REPO_READ_TOKEN to Anireil-Rules repository Actions secrets. The token needs read-only Contents access to Anireil-Bot."
+            exit 1
+          fi
+
       - name: Checkout official Bot source
         uses: actions/checkout@v4
         with:
           repository: anireilst/Anireil-Bot
           ref: main
           path: source-bot
+          token: ${{ secrets.BOT_REPO_READ_TOKEN }}
           persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: rules
 
       - name: Setup Node
         uses: actions/setup-node@v4
