@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a12">
+  <meta name="description" content="Официальная база правил Anireil: Конституция, Кодекс и Индекс запретов.">
+  <title>Anireil Rules — официальная база правил</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#documentContent">Перейти к документу</a>
+
+  <div class="ambient ambient-left" aria-hidden="true"></div>
+  <div class="ambient ambient-right" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#constitution" aria-label="Anireil Rules — главная">
+      <span class="brand-mark" aria-hidden="true">A<span></span></span>
+      <span class="brand-copy">
+        <strong>ANIREIL</strong>
+        <small>RULES ARCHIVE</small>
+      </span>
+    </a>
+
+    <nav class="desktop-doc-nav" aria-label="Документы">
+      <a href="#constitution" data-doc-link="constitution">Конституция</a>
+      <a href="#codex" data-doc-link="codex">Кодекс</a>
+      <a href="#prohibitions" data-doc-link="prohibitions">Индекс</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <button id="searchToggle" class="topbar-button" type="button" aria-haspopup="dialog">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.7"/>
+          <path d="m15.7 15.7 4.1 4.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span>Поиск</span>
+        <kbd>/</kbd>
+      </button>
+      <button id="menuToggle" class="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Открыть оглавление">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="mobileBackdrop" class="mobile-backdrop" hidden></div>
+
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar" aria-label="Навигация по правилам">
+      <div class="sidebar-head">
+        <div>
+          <span class="sidebar-kicker">ANIREIL / DOCUMENTS</span>
+          <strong>Правила</strong>
+        </div>
+        <button id="sidebarClose" class="sidebar-close" type="button" aria-label="Закрыть оглавление">Закрыть</button>
+      </div>
+
+      <nav id="documentSwitcher" class="document-switcher" aria-label="Выбор документа"></nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="toc-head">
+        <span>Оглавление</span>
+        <span id="tocCount">0</span>
+      </div>
+      <nav id="toc" class="toc" aria-label="Оглавление текущего документа"></nav>
+
+      <div class="sidebar-source">
+        <span class="source-dot" aria-hidden="true"></span>
+        <span>Источник: Anireil-Bot / rules</span>
+      </div>
+    </aside>
+
+    <main class="reader">
+      <section class="document-hero" aria-labelledby="documentTitle">
+        <div class="document-hero-copy">
+          <div class="document-meta-line">
+            <span id="documentLabel">Официальный документ</span>
+            <span id="documentVersion" hidden></span>
+          </div>
+
+          <h1 id="documentTitle">Загружаем правила</h1>
+          <p id="documentDescription" class="document-description">
+            Подготавливаем действующую редакцию документов Anireil.
+          </p>
+
+          <label class="inline-search" for="inlineSearch">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.7"/>
+              <path d="m15.7 15.7 4.1 4.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            <input id="inlineSearch" type="search" placeholder="Найти статью, правило или номер..." autocomplete="off" spellcheck="false">
+            <span class="search-scope">по всем документам</span>
+          </label>
+        </div>
+
+        <aside class="document-summary" aria-label="Сводка документа">
+          <div class="summary-top">
+            <span>DOCUMENT / LIVE INDEX</span>
+            <span id="summaryCode">AR-01</span>
+          </div>
+          <div class="summary-number" id="articleCount">—</div>
+          <div class="summary-label">статей и положений</div>
+          <div class="summary-grid">
+            <div>
+              <span>Разделов</span>
+              <strong id="sectionCount">—</strong>
+            </div>
+            <div>
+              <span>Статус</span>
+              <strong>Действует</strong>
+            </div>
+          </div>
+          <div class="summary-status">
+            <span></span>
+            <p>Текст загружен из официального источника правил</p>
+          </div>
+        </aside>
+      </section>
+
+      <section id="searchResults" class="search-results" hidden aria-live="polite">
+        <div class="search-results-head">
+          <div>
+            <span class="section-kicker">GLOBAL SEARCH</span>
+            <h2>Результаты поиска</h2>
+          </div>
+          <button id="clearSearch" class="text-button" type="button">Очистить</button>
+        </div>
+        <p id="searchSummary" class="search-summary"></p>
+        <div id="searchResultsList" class="search-results-list"></div>
+      </section>
+
+      <section class="reading-section">
+        <div class="reading-heading">
+          <div>
+            <span class="section-kicker">CURRENT DOCUMENT</span>
+            <h2 id="readingTitle">Содержание</h2>
+          </div>
+          <button id="copyDocumentLink" class="text-button" type="button">Скопировать ссылку</button>
+        </div>
+
+        <div id="loadingState" class="state-card">Загружаем документы...</div>
+        <div id="errorState" class="state-card error" hidden>
+          Не удалось загрузить правила. Обнови страницу или проверь файл data/rules.json.
+        </div>
+        <div id="documentContent" class="document-content" tabindex="-1" hidden></div>
+      </section>
+
+      <footer class="site-footer">
+        <div>
+          <strong>ANIREIL RULES</strong>
+          <span>Официальная база документов сообщества</span>
+        </div>
+        <p>Интерфейс не изменяет содержание правил.</p>
+      </footer>
+    </main>
+  </div>
+
+  <dialog id="searchDialog" class="search-dialog" aria-labelledby="searchDialogTitle">
+    <div class="search-dialog-shell">
+      <div class="search-dialog-head">
+        <div>
+          <span class="section-kicker">SEARCH / RULES DATABASE</span>
+          <h2 id="searchDialogTitle">Поиск по правилам</h2>
+        </div>
+        <button id="searchDialogClose" class="dialog-close" type="button" aria-label="Закрыть поиск">Закрыть</button>
+      </div>
+      <label class="dialog-search" for="dialogSearchInput">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.7"/>
+          <path d="m15.7 15.7 4.1 4.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <input id="dialogSearchInput" type="search" placeholder="Например: 8.2, угрозы, апелляция..." autocomplete="off">
+      </label>
+      <div id="dialogSearchResults" class="dialog-search-results"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
