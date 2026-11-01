@@ -56,6 +56,7 @@ function flattenSections(sections, label) {
   }
 
   const articles = [];
+  const allIds = new Set();
 
   for (const section of sections) {
     if (!section || !Array.isArray(section.articles)) {
@@ -63,7 +64,15 @@ function flattenSections(sections, label) {
     }
 
     validateArticles(section.articles, label + ' / ' + section.title);
-    articles.push(...section.articles);
+
+    for (const article of section.articles) {
+      if (allIds.has(article.id)) {
+        throw new Error(label + ' contains duplicate article ID across sections: ' + article.id);
+      }
+
+      allIds.add(article.id);
+      articles.push(article);
+    }
   }
 
   return articles;
