@@ -163,3 +163,16 @@ test('document hero title stays inside its column without covering the summary',
   assert.match(heroLayout, /\.document-summary\s*\{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/s);
   assert.match(heroLayout, /@media \(max-width: 820px\)\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/s);
 });
+
+
+test('print layout hides the site header, document tabs and search control', () => {
+  const printStart = css.indexOf('@media print');
+  const printEnd = css.indexOf('\n}', printStart);
+  const printRules = css.slice(printStart, printEnd);
+
+  assert.match(printRules, /\.topbar\s*,/);
+  assert.match(printRules, /\.skip-link\s*,/);
+  assert.match(printRules, /\.sidebar\s*,/);
+  assert.match(printRules, /\.document-switcher\s*,/);
+  assert.match(printRules, /\.search-dialog\s*,/);
+});
