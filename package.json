@@ -1,0 +1,13 @@
+{
+  "name": "anireil-rules",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official responsive rules archive for Anireil",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
