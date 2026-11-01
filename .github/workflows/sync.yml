@@ -1,0 +1,120 @@
+name: Sync official Anireil rules
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  synchronize:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+
+    steps:
+      - name: Checkout Rules site
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Require read access to the private Bot repository
+        env:
+          BOT_REPO_READ_TOKEN: ${{ secrets.BOT_REPO_READ_TOKEN }}
+        run: |
+          if [ -z "$BOT_REPO_READ_TOKEN" ]; then
+            echo "::error title=Missing repository secret::Add BOT_REPO_READ_TOKEN to Anireil-Rules repository Actions secrets. The token needs read-only Contents access to Anireil-Bot."
+            exit 1
+          fi
+
+      - name: Checkout official Bot source
+        uses: actions/checkout@v4
+        with:
+          repository: anireilst/Anireil-Bot
+          ref: main
+          path: source-bot
+          token: ${{ secrets.BOT_REPO_READ_TOKEN }}
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: rules
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Generate current rules snapshot
+        run: npm run sync
+
+      - name: Detect source changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet -- data/rules.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare isolated snapshot artifact
+        if: steps.changes.outputs.changed == 'true'
+        run: cp data/rules.json rules-snapshot.json
+
+      - name: Upload synchronized snapshot
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rules-snapshot
+          path: rules-snapshot.json
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: synchronize
+    if: needs.synchronize.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout Rules site
+        uses: actions/checkout@v4
+
+      - name: Download synchronized snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: rules-snapshot
+          path: sync-artifact
+
+      - name: Replace published rules data
+        run: cp sync-artifact/rules-snapshot.json data/rules.json
+
+      - name: Commit synchronized rules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/rules.json
+          git commit -m "chore(rules): sync official documents from Anireil-Bot"
+          git push
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload updated static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+      - name: Publish updated Rules site
+        id: deployment
+        uses: actions/deploy-pages@v4

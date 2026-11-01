@@ -9,20 +9,28 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
 const script = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 
-test('official documents keep expected source counts', () => {
-  const constitutionCount = data.constitution.reduce(
-    (sum, chapter) => sum + chapter.articles.length,
-    0
-  );
-  const codexCount = data.codex.reduce(
-    (sum, chapter) => sum + chapter.articles.length,
-    0
-  );
+test('official documents contain complete, non-empty source sections', () => {
+  for (const [label, sections] of [
+    ['Constitution', data.constitution],
+    ['Codex', data.codex]
+  ]) {
+    assert.ok(Array.isArray(sections) && sections.length > 0, label + ' has no sections');
 
-  assert.equal(constitutionCount, 47);
-  assert.equal(codexCount, 55);
-  assert.equal(data.prohibitions.general.length, 5);
-  assert.equal(data.prohibitions.items.length, 58);
+    for (const section of sections) {
+      assert.ok(section.title);
+      assert.ok(Array.isArray(section.articles) && section.articles.length > 0);
+
+      for (const article of section.articles) {
+        assert.ok(article.id);
+        assert.ok(article.title);
+        assert.ok(article.text);
+      }
+    }
+  }
+
+  assert.ok(data.prohibitions.general.length > 0);
+  assert.ok(data.prohibitions.items.length > 0);
+  assert.match(data.meta.sourceRevision, /^[a-f0-9]{16}$/);
 });
 
 test('article identifiers are unique inside every document', () => {
@@ -75,7 +83,10 @@ test('responsive site keeps all runtime hooks', () => {
   for (const id of [
     'documentSwitcher', 'toc', 'documentTitle', 'documentContent',
     'inlineSearch', 'searchResults', 'searchToggle', 'searchDialog',
-    'dialogSearchInput', 'menuToggle', 'sidebar', 'mobileBackdrop', 'toast'
+    'dialogSearchInput', 'searchDocumentFilter', 'searchSectionFilter',
+    'searchSeverityFilter', 'searchArticleFilter', 'dialogSearchSummary',
+    'clearSearchFilters', 'printDocument', 'menuToggle', 'sidebar',
+    'mobileBackdrop', 'toast'
   ]) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
@@ -92,6 +103,10 @@ test('application supports routing, global search and direct links', () => {
   assert.match(script, /window\.addEventListener\('hashchange'/);
   assert.match(script, /navigator\.clipboard/);
   assert.match(script, /function searchRules\(/);
+  assert.match(script, /function getAdvancedSearchFilters\(/);
+  assert.match(script, /function renderSearchSectionFilter\(/);
+  assert.match(script, /sectionKey/);
+  assert.match(script, /window\.print\(\)/);
   assert.match(script, /function highlightCurrentArticle\(/);
 });
 
@@ -112,3 +127,27 @@ test('Rules typography keeps articles readable and visually hierarchical', () =>
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.article-card p\s*\{[\s\S]*?font-size:\s*0\.89rem;/s);
 });
 
+
+
+test('Rules archive includes the source sync contract and scheduled workflow', () => {
+  const syncScript = fs.readFileSync(path.join(root, 'scripts', 'sync-rules.js'), 'utf8');
+  const syncWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'sync.yml'), 'utf8');
+  const checksWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'checks.yml'), 'utf8');
+
+  assert.match(syncScript, /publicationData/);
+  assert.match(syncScript, /sourceRevision/);
+  assert.match(syncWorkflow, /schedule:/);
+  assert.match(syncWorkflow, /workflow_dispatch/);
+  assert.match(syncWorkflow, /actions\/deploy-pages@v4/);
+  assert.match(checksWorkflow, /anireilst\/Anireil-Bot/);
+  assert.match(checksWorkflow, /sync:check/);
+});
+
+test('article structure and A4 print styles stay in the graphite theme', () => {
+  assert.match(script, /chapter-article-count/);
+  assert.match(css, /GRAPHITE DOCUMENT STRUCTURE \/ ADVANCED SEARCH \/ PRINT/);
+  assert.match(css, /\.chapter-heading\s*\{[\s\S]*?grid-template-columns:\s*auto minmax\(0, 1fr\) auto;/s);
+  assert.match(css, /@page\s*\{[\s\S]*?size:\s*A4;/s);
+  assert.match(css, /@media print\s*\{[\s\S]*?\.article-card[\s\S]*?break-inside:\s*avoid;/s);
+  assert.match(css, /--bg:\s*#23272b/);
+});

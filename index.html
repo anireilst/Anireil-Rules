@@ -137,7 +137,10 @@
             <span class="section-kicker">CURRENT DOCUMENT</span>
             <h2 id="readingTitle">Содержание</h2>
           </div>
-          <button id="copyDocumentLink" class="text-button" type="button">Скопировать ссылку</button>
+          <div class="reading-actions">
+            <button id="printDocument" class="text-button" type="button">Печать / PDF</button>
+            <button id="copyDocumentLink" class="text-button" type="button">Скопировать ссылку</button>
+          </div>
         </div>
 
         <div id="loadingState" class="state-card">Загружаем документы...</div>
@@ -173,6 +176,49 @@
         </svg>
         <input id="dialogSearchInput" type="search" placeholder="Например: 8.2, угрозы, апелляция..." autocomplete="off">
       </label>
+
+      <div class="search-filter-grid" aria-label="Фильтры поиска">
+        <label class="search-filter" for="searchDocumentFilter">
+          <span>Документ</span>
+          <select id="searchDocumentFilter">
+            <option value="">Все документы</option>
+            <option value="constitution">Конституция</option>
+            <option value="codex">Кодекс</option>
+            <option value="prohibitions">Индекс запретов</option>
+          </select>
+        </label>
+
+        <label class="search-filter" for="searchSectionFilter">
+          <span>Глава / категория</span>
+          <select id="searchSectionFilter">
+            <option value="">Все главы и категории</option>
+          </select>
+        </label>
+
+        <label class="search-filter" for="searchSeverityFilter">
+          <span>Уровень тяжести</span>
+          <select id="searchSeverityFilter">
+            <option value="">Любой уровень</option>
+            <option value="1">1 — Незначительное</option>
+            <option value="2">2 — Существенное</option>
+            <option value="3">3 — Серьёзное</option>
+            <option value="4">4 — Критическое</option>
+          </select>
+        </label>
+
+        <label class="search-filter" for="searchArticleFilter">
+          <span>Номер статьи</span>
+          <input id="searchArticleFilter" type="search" placeholder="Например, 8.2 или II-001" autocomplete="off" spellcheck="false">
+        </label>
+      </div>
+
+      <div class="search-filter-footer">
+        <p id="dialogSearchSummary" class="search-dialog-summary">
+          Поиск по документам, главам, категориям, уровням и номерам статей.
+        </p>
+        <button id="clearSearchFilters" class="text-button" type="button">Сбросить фильтры</button>
+      </div>
+
       <div id="dialogSearchResults" class="dialog-search-results"></div>
     </div>
   </dialog>
