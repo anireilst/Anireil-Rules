@@ -95,11 +95,11 @@ test('application supports routing, global search and direct links', () => {
   assert.match(script, /function highlightCurrentArticle\(/);
 });
 
-test('Rules keeps its separate dark gray Graphite Archive identity', () => {
-  assert.match(css, /GRAPHITE ARCHIVE \/ DARK GRAY THEME/);
-  assert.match(css, /color-scheme:\s*dark/);
-  assert.match(css, /--bg:\s*#2f3338/);
-  assert.match(css, /linear-gradient\(180deg, #373c42 0%, #30353a 50%, #2b3035 100%\)/);
-  assert.match(html, /<meta name="theme-color" content="#33383e">/);
+test('Rules keeps its separate deep graphite identity', () => {
+  assert.match(css, /DEEP GRAPHITE \/ TRUE DARK GRAY/);
+  assert.match(css, /--bg:\s*#23272b/);
+  assert.match(css, /linear-gradient\(180deg, #2a2f33 0%, #252a2e 48%, #22262a 100%\)/);
+  assert.match(css, /\.reading-section\s*\{[\s\S]*?rgba\(42, 47, 51, 0\.94\)/s);
+  assert.match(html, /<meta name="theme-color" content="#252a2e">/);
 });
 
