@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-01T13:14:32.289Z",
+  "sourceRevision": "3310b0101904eb2e",
+  "documents": {
+    "constitution": {
+      "id": "constitution",
+      "title": "Конституция",
+      "revisions": [
+        {
+          "edition": 1,
+          "revisionId": "5b373ac021eba30c",
+          "publishedAt": "2026-11-01T13:14:32.289Z",
+          "sourceRevision": "3310b0101904eb2e",
+          "articleCount": 47,
+          "changeCount": 0,
+          "summary": "Сохранена первая редакция. Предыдущие редакции не архивировались.",
+          "changes": [],
+          "snapshot": "data/history/snapshots/constitution/edition-1-5b373ac021eba30c.json"
+        }
+      ]
+    },
+    "codex": {
+      "id": "codex",
+      "title": "Кодекс",
+      "revisions": [
+        {
+          "edition": 1,
+          "revisionId": "f5dfa855b727bbc3",
+          "publishedAt": "2026-11-01T13:14:32.289Z",
+          "sourceRevision": "3310b0101904eb2e",
+          "articleCount": 55,
+          "changeCount": 0,
+          "summary": "Сохранена первая редакция. Предыдущие редакции не архивировались.",
+          "changes": [],
+          "snapshot": "data/history/snapshots/codex/edition-1-f5dfa855b727bbc3.json"
+        }
+      ]
+    },
+    "prohibitions": {
+      "id": "prohibitions",
+      "title": "Индекс запретов",
+      "revisions": [
+        {
+          "edition": 1,
+          "revisionId": "f7e5b9f2aad4c936",
+          "publishedAt": "2026-11-01T13:14:32.289Z",
+          "sourceRevision": "3310b0101904eb2e",
+          "articleCount": 63,
+          "changeCount": 0,
+          "summary": "Сохранена первая редакция. Предыдущие редакции не архивировались.",
+          "changes": [],
+          "snapshot": "data/history/snapshots/prohibitions/edition-1-f7e5b9f2aad4c936.json"
+        }
+      ]
+    }
+  }
+}
