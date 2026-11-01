@@ -12,13 +12,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Rules site
         uses: actions/checkout@v4
+
+      - name: Checkout official Bot rules
+        uses: actions/checkout@v4
+        with:
+          repository: anireilst/Anireil-Bot
+          ref: main
+          path: source-bot
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - name: Verify the archive matches the official source
+        run: npm run sync:check
+
       - name: Run regression tests
         run: npm test
-      - name: Check browser JavaScript syntax
+
+      - name: Check JavaScript syntax
         run: npm run check
