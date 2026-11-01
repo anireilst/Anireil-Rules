@@ -25,7 +25,7 @@ jobs:
           repository: anireilst/Anireil-Bot
           ref: main
           path: source-bot
-          token: ${{ env.BOT_REPO_READ_TOKEN }}
+          token: ${{ secrets.BOT_REPO_READ_TOKEN }}
           persist-credentials: false
           fetch-depth: 1
           sparse-checkout: rules
