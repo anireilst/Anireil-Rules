@@ -95,11 +95,11 @@ test('application supports routing, global search and direct links', () => {
   assert.match(script, /function highlightCurrentArticle\(/);
 });
 
-test('Rules keeps its separate light gray Ash Archive identity', () => {
-  assert.match(css, /ASH ARCHIVE \/ GRAY THEME/);
-  assert.match(css, /color-scheme:\s*light/);
-  assert.match(css, /--bg:\s*#d3d7dc/);
-  assert.match(css, /\.document-hero\s*\{[\s\S]*?#dbe0e4|\.document-hero\s*\{[\s\S]*?rgba\(233, 236, 239/s);
-  assert.match(html, /<meta name="theme-color" content="#d7dce0">/);
+test('Rules keeps its separate dark gray Graphite Archive identity', () => {
+  assert.match(css, /GRAPHITE ARCHIVE \/ DARK GRAY THEME/);
+  assert.match(css, /color-scheme:\s*dark/);
+  assert.match(css, /--bg:\s*#2f3338/);
+  assert.match(css, /linear-gradient\(180deg, #373c42 0%, #30353a 50%, #2b3035 100%\)/);
+  assert.match(html, /<meta name="theme-color" content="#33383e">/);
 });
 
