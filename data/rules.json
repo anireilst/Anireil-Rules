@@ -41,7 +41,31 @@
       "10": "Администрация Anireil",
       "11": "Чистка и поддержание активности"
     },
-    "sourceRevision": "3310b0101904eb2e"
+    "sourceRevision": "3310b0101904eb2e",
+    "publication": {
+      "generatedAt": "2026-11-01T13:14:32.289Z",
+      "sourceRevision": "3310b0101904eb2e",
+      "documents": {
+        "constitution": {
+          "edition": 1,
+          "revisionId": "5b373ac021eba30c",
+          "updatedAt": "2026-11-01T13:14:32.289Z",
+          "changeCount": 0
+        },
+        "codex": {
+          "edition": 1,
+          "revisionId": "f5dfa855b727bbc3",
+          "updatedAt": "2026-11-01T13:14:32.289Z",
+          "changeCount": 0
+        },
+        "prohibitions": {
+          "edition": 1,
+          "revisionId": "f7e5b9f2aad4c936",
+          "updatedAt": "2026-11-01T13:14:32.289Z",
+          "changeCount": 0
+        }
+      }
+    }
   },
   "constitution": [
     {
