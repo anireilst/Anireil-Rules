@@ -3586,7 +3586,9 @@ body::before {
 
   body::before,
   body::after,
-  .site-header,
+  .topbar,
+  .skip-link,
+  .ambient,
   .sidebar,
   .menu-toggle,
   .mobile-backdrop,
