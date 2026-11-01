@@ -1,6 +1,5 @@
 'use strict';
 
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -11,6 +10,18 @@ const checkOnly = process.argv.includes('--check');
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function hashSnapshot(value) {
+  let hash = 14695981039346656037n;
+  const bytes = new TextEncoder().encode(value);
+
+  for (const byte of bytes) {
+    hash ^= BigInt(byte);
+    hash = BigInt.asUintN(64, hash * 1099511628211n);
+  }
+
+  return hash.toString(16).padStart(16, '0');
 }
 
 function validateArticles(articles, label) {
@@ -106,11 +117,7 @@ function buildSnapshot(existingData) {
     }
   };
 
-  const revision = crypto
-    .createHash('sha256')
-    .update(JSON.stringify(documents))
-    .digest('hex')
-    .slice(0, 16);
+  const revision = hashSnapshot(JSON.stringify(documents));
 
   const meta = clone(existingData.meta);
   meta.sourceRepository = 'anireilst/Anireil-Bot';
