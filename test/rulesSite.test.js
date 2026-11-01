@@ -103,3 +103,12 @@ test('Rules keeps its separate deep graphite identity', () => {
   assert.match(html, /<meta name="theme-color" content="#252a2e">/);
 });
 
+test('Rules typography keeps articles readable and visually hierarchical', () => {
+  assert.match(css, /EDITORIAL TYPOGRAPHY \/ RULES READER/);
+  assert.match(css, /\.article-card h4\s*\{[\s\S]*?font-size:\s*1\.02rem;[\s\S]*?font-weight:\s*740;/s);
+  assert.match(css, /\.article-card p\s*\{[\s\S]*?font-size:\s*0\.93rem;[\s\S]*?line-height:\s*1\.82;/s);
+  assert.match(css, /\.article-id\s*\{[\s\S]*?font-weight:\s*760;[\s\S]*?font-variant-numeric:\s*tabular-nums;/s);
+  assert.match(css, /\.chapter-heading h3\s*\{[\s\S]*?font-weight:\s*760;/s);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.article-card p\s*\{[\s\S]*?font-size:\s*0\.89rem;/s);
+});
+
