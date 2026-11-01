@@ -46,3 +46,41 @@ python -m http.server 8080
 Если Pages ещё не включён для нового репозитория, в настройках репозитория нужно выбрать:
 
 `Settings → Pages → Build and deployment → Source → GitHub Actions`.
+
+
+## Source synchronization
+
+The official rule source is the `rules/` directory in
+[anireilst/Anireil-Bot](https://github.com/anireilst/Anireil-Bot).
+
+The Rules repository generates `data/rules.json` from these source modules:
+
+- `rules/constitution.js`
+- `rules/index.js` and `rules/chapter1.js` through `rules/chapter8.js`
+- `rules/prohibitions.js` and its exported `publicationData`
+
+The `Sync official Anireil rules` workflow checks for source changes every 15 minutes
+and can also be started manually from the Actions tab. When the snapshot changes, it
+commits the refreshed JSON and publishes the updated GitHub Pages site. No MongoDB,
+external database, or repository secret is required.
+
+The sync job runs with read-only repository permissions. The separate publishing job
+receives write and Pages permissions only after the source snapshot has been generated.
+
+To refresh locally, check out Anireil-Bot into `source-bot/` and run:
+
+```sh
+npm run sync
+npm run sync:check
+npm test
+npm run check
+```
+
+The source revision recorded in `data/rules.json` is a content hash of the official
+documents. Unrelated bot commits do not cause unnecessary website deployments.
+
+## Reader features
+
+- The global search dialog can filter by document, chapter/category, severity and article ID.
+- The print action formats the currently selected document for A4 printing or saving as PDF.
+- Browser and screen-reader controls remain available in the normal graphite interface.
