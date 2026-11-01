@@ -151,3 +151,15 @@ test('article structure and A4 print styles stay in the graphite theme', () => {
   assert.match(css, /@media print\s*\{[\s\S]*?\.article-card[\s\S]*?break-inside:\s*avoid;/s);
   assert.match(css, /--bg:\s*#23272b/);
 });
+
+
+test('document hero title stays inside its column without covering the summary', () => {
+  assert.match(css, /DOCUMENT HERO TITLE FIT/);
+
+  const heroLayout = css.slice(css.indexOf('DOCUMENT HERO TITLE FIT'));
+  assert.match(heroLayout, /\.document-hero\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1\.12fr\) minmax\(280px, 0\.88fr\);/s);
+  assert.match(heroLayout, /\.document-hero-copy\s*\{[\s\S]*?min-width:\s*0;/s);
+  assert.match(heroLayout, /\.document-hero h1\s*\{[\s\S]*?max-width:\s*100%;[\s\S]*?font-size:\s*clamp\(2\.8rem, 5\.2vw, 4\.7rem\);/s);
+  assert.match(heroLayout, /\.document-summary\s*\{[\s\S]*?width:\s*100%;[\s\S]*?min-width:\s*0;/s);
+  assert.match(heroLayout, /@media \(max-width: 820px\)\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/s);
+});
