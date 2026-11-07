@@ -2,11 +2,11 @@ name: Sync official Anireil rules
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 concurrency:
-  group: pages
+  group: rules-source-sync
   cancel-in-progress: false
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
           path: source-bot
           token: ${{ secrets.BOT_REPO_READ_TOKEN }}
           persist-credentials: false
-          fetch-depth: 1
+          fetch-depth: 0
           sparse-checkout: rules
 
       - name: Setup Node
@@ -50,6 +50,12 @@ jobs:
 
       - name: Generate current rules snapshot
         run: npm run sync
+
+      - name: Validate rules archive and revision history
+        run: |
+          npm test
+          npm run check
+          npm run sync:check
 
       - name: Detect source changes
         id: changes
@@ -72,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rules-archive
-          path: sync-artifact/data
+          path: sync-artifact
           if-no-files-found: error
           retention-days: 1
 
@@ -82,11 +88,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout Rules site
@@ -98,6 +99,12 @@ jobs:
           name: rules-archive
           path: sync-artifact
 
+      - name: Validate downloaded archive structure
+        run: |
+          test -f sync-artifact/data/rules.json
+          test -f sync-artifact/data/history.json
+          test -d sync-artifact/data/history/snapshots
+
       - name: Replace published rules archive
         run: |
           mkdir -p data
@@ -108,17 +115,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/
+          if git diff --cached --quiet; then
+            echo "No generated rules changes to publish."
+            exit 0
+          fi
           git commit -m "chore(rules): sync official documents from Anireil-Bot"
           git push
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload updated static site
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
-
-      - name: Publish updated Rules site
-        id: deployment
-        uses: actions/deploy-pages@v4

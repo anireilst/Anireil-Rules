@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { buildHistory } = require('./rules-history');
 
 const projectRoot = path.resolve(__dirname, '..');
@@ -10,6 +11,26 @@ const dataPath = path.join(dataDirectory, 'rules.json');
 const historyPath = path.join(dataDirectory, 'history.json');
 const sourceRoot = path.resolve(process.argv[2] || path.join(projectRoot, 'source-bot'));
 const checkOnly = process.argv.includes('--check');
+
+
+function getRulesPublicationDate() {
+  try {
+    const committedAt = execFileSync(
+      'git',
+      ['-C', sourceRoot, 'log', '-1', '--format=%cI', '--', 'rules'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+    ).trim();
+
+    const parsed = new Date(committedAt);
+    if (committedAt && !Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  } catch (error) {
+    // A source checkout without Git history is supported for local development.
+  }
+
+  return new Date().toISOString();
+}
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -129,14 +150,26 @@ function buildSnapshot(existingData) {
     }
   };
 
-  const revision = hashSnapshot(JSON.stringify(documents));
+  const prohibitionCategories = clone(publication.categoryTitles);
+  const prohibitionSeverity = clone(publication.severityLabels);
+  const revision = hashSnapshot(JSON.stringify({
+    documents,
+    prohibitionCategories,
+    prohibitionSeverity
+  }));
 
   const meta = clone(existingData.meta);
+  // Public editions belong to the complete rules suite, never to individual files.
+  meta.documents = meta.documents.map(function (document) {
+    const sharedDocument = { ...document };
+    delete sharedDocument.version;
+    return sharedDocument;
+  });
   meta.sourceRepository = 'anireilst/Anireil-Bot';
   meta.sourceRef = 'main';
   meta.sourceRevision = revision;
-  meta.prohibitionCategories = clone(publication.categoryTitles);
-  meta.prohibitionSeverity = clone(publication.severityLabels);
+  meta.prohibitionCategories = prohibitionCategories;
+  meta.prohibitionSeverity = prohibitionSeverity;
 
   return {
     meta,
@@ -164,7 +197,7 @@ function main() {
     existingHistory,
     existingData,
     generatedData,
-    new Date().toISOString()
+    getRulesPublicationDate()
   );
 
   generatedData.meta.publication = historyResult.publication;

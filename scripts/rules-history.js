@@ -224,6 +224,23 @@ function summarizeChanges(changes) {
     .join(' · ') + '.';
 }
 
+function getSuiteRevisionId(data) {
+  const suiteContent = DOCUMENT_IDS.map(function (documentId) {
+    return {
+      id: documentId,
+      content: getDocumentContent(data, documentId)
+    };
+  });
+
+  return hashText(JSON.stringify(suiteContent));
+}
+
+function getLatestRevision(documentHistory) {
+  return documentHistory.revisions
+    .slice()
+    .sort(function (a, b) { return b.edition - a.edition; })[0] || null;
+}
+
 function buildHistory(existingHistory, previousData, nextData, publishedAt) {
   const history = existingHistory ? clone(existingHistory) : {
     schemaVersion: 1,
@@ -237,7 +254,46 @@ function buildHistory(existingHistory, previousData, nextData, publishedAt) {
   }
 
   const snapshots = {};
-  const publicationDocuments = {};
+  const documentStates = {};
+  const baselineDate = history.generatedAt || publishedAt;
+  const previousSuiteRevisionId = getSuiteRevisionId(previousData);
+  const nextSuiteRevisionId = getSuiteRevisionId(nextData);
+
+  let publicationRevisions = Array.isArray(history.publicationRevisions)
+    ? history.publicationRevisions.slice()
+    : [];
+
+  // Migrate the previous per-document archive into one shared initial edition.
+  if (!publicationRevisions.length) {
+    publicationRevisions.push({
+      edition: 1,
+      revisionId: previousSuiteRevisionId,
+      publishedAt: baselineDate,
+      sourceRevision: previousData.meta.sourceRevision || null,
+      changedDocuments: [],
+      changes: [],
+      summary: 'Сохранена первая общая редакция правил Anireil.'
+    });
+  }
+
+  publicationRevisions.sort(function (a, b) {
+    return a.edition - b.edition;
+  });
+
+  let currentPublication = publicationRevisions[publicationRevisions.length - 1];
+
+  if (!currentPublication || !currentPublication.revisionId) {
+    throw new Error('Rules publication history is missing its current revision hash.');
+  }
+
+  // The suite revision advances once, regardless of how many of the three
+  // documents changed. Every document receives the same edition and date.
+  const suiteChanged = currentPublication.revisionId !== nextSuiteRevisionId;
+  const nextEdition = suiteChanged ? currentPublication.edition + 1 : currentPublication.edition;
+  const nextPublishedAt = suiteChanged ? publishedAt : currentPublication.publishedAt;
+
+  const changedDocuments = [];
+  const publicationChanges = [];
 
   for (const documentId of DOCUMENT_IDS) {
     const meta = getDocumentMeta(nextData, documentId);
@@ -254,50 +310,80 @@ function buildHistory(existingHistory, previousData, nextData, publishedAt) {
       ? documentHistory.revisions.slice()
       : [];
 
-    const latest = documentHistory.revisions
-      .slice()
-      .sort(function (a, b) { return b.edition - a.edition; })[0];
+    const latest = getLatestRevision(documentHistory);
+    const previousContent = getDocumentContent(previousData, documentId);
+    const previousRevisionId = hashText(JSON.stringify(previousContent));
+    const documentChanged = previousRevisionId !== revisionId;
 
-    let revision = latest;
+    let revision;
 
-    if (!latest) {
-      revision = {
-        edition: 1,
-        revisionId,
-        publishedAt,
-        sourceRevision: nextData.meta.sourceRevision,
-        articleCount: getArticleCount(documentId, content),
-        changeCount: 0,
-        summary: 'Сохранена первая редакция. Предыдущие редакции не архивировались.',
-        changes: [],
-        snapshot: ''
-      };
-    } else if (latest.revisionId !== revisionId) {
-      const previousContent = getDocumentContent(previousData, documentId);
-      const changes = diffDocuments(documentId, previousContent, content);
+    if (suiteChanged) {
+      let changes = documentChanged
+        ? diffDocuments(documentId, previousContent, content)
+        : [];
 
-      if (!changes.length) {
-        changes.push({
+      if (documentChanged && !changes.length) {
+        changes = [{
           type: 'metadata',
           articleId: '',
           title: 'Обновлена структура или справочные сведения документа',
           before: null,
           after: null,
           moved: false
-        });
+        }];
       }
 
       revision = {
-        edition: latest.edition + 1,
+        edition: nextEdition,
         revisionId,
-        publishedAt,
+        publishedAt: nextPublishedAt,
         sourceRevision: nextData.meta.sourceRevision,
         articleCount: getArticleCount(documentId, content),
         changeCount: changes.length,
-        summary: summarizeChanges(changes),
+        summary: documentChanged
+          ? summarizeChanges(changes)
+          : 'Содержание документа не менялось; он включён в общую редакцию № ' + nextEdition + '.',
         changes,
         snapshot: ''
       };
+
+      documentHistory.revisions.unshift(revision);
+
+      if (documentChanged) {
+        changedDocuments.push(documentId);
+        publicationChanges.push({
+          documentId,
+          title: meta.shortTitle || meta.title,
+          changeCount: changes.length,
+          summary: revision.summary,
+          changes
+        });
+      }
+    } else {
+      if (!latest) {
+        revision = {
+          edition: currentPublication.edition,
+          revisionId,
+          publishedAt: currentPublication.publishedAt,
+          sourceRevision: currentPublication.sourceRevision,
+          articleCount: getArticleCount(documentId, content),
+          changeCount: 0,
+          summary: 'Сохранён снимок документа в общей редакции.',
+          changes: [],
+          snapshot: ''
+        };
+        documentHistory.revisions.unshift(revision);
+      } else {
+        revision = latest;
+
+        // Keep the document snapshot aligned with the shared publication.
+        if (revision.revisionId !== revisionId) {
+          throw new Error(
+            'Document ' + documentId + ' does not match the current shared rules edition. ' +
+            'Restore the archive before synchronizing.'
+          );
+        }
+      }
     }
 
     const snapshotPath = revision.snapshot ||
@@ -318,50 +404,71 @@ function buildHistory(existingHistory, previousData, nextData, publishedAt) {
 
     snapshots[snapshotPath] = JSON.stringify(snapshot, null, 2) + '\n';
 
-    if (!latest || latest.revisionId !== revisionId) {
-      documentHistory.revisions.unshift(revision);
-    } else {
-      const index = documentHistory.revisions.findIndex(function (item) {
-        return item.edition === revision.edition;
-      });
-
-      if (index >= 0) documentHistory.revisions[index] = revision;
-      else documentHistory.revisions.unshift(revision);
-    }
-
     documentHistory.revisions.sort(function (a, b) {
       return b.edition - a.edition;
     });
 
     history.documents[documentId] = documentHistory;
-
-    publicationDocuments[documentId] = {
-      edition: revision.edition,
+    documentStates[documentId] = {
       revisionId,
-      updatedAt: revision.publishedAt,
-      changeCount: revision.changeCount
+      changeCount: revision.changeCount,
+      summary: revision.summary
     };
   }
 
-  const dates = Object.values(publicationDocuments).map(function (document) {
-    return document.updatedAt;
-  }).filter(Boolean).sort();
+  if (suiteChanged) {
+    const summary = publicationChanges.length
+      ? 'Обновлены документы: ' + publicationChanges.map(function (item) {
+          return item.title;
+        }).join(', ') + '.'
+      : 'Обновлена общая структура публикации правил Anireil.';
 
-  history.schemaVersion = 1;
-  history.generatedAt = dates[dates.length - 1] || history.generatedAt || publishedAt;
+    currentPublication = {
+      edition: nextEdition,
+      revisionId: nextSuiteRevisionId,
+      publishedAt: nextPublishedAt,
+      sourceRevision: nextData.meta.sourceRevision,
+      changedDocuments,
+      changes: publicationChanges,
+      summary
+    };
+
+    publicationRevisions.push(currentPublication);
+  }
+
+  history.publicationRevisions = publicationRevisions;
+  history.publication = clone(currentPublication);
+  history.schemaVersion = 2;
+  history.generatedAt = currentPublication.publishedAt || history.generatedAt || publishedAt;
   history.sourceRevision = nextData.meta.sourceRevision;
+
+  const publicationDocuments = {};
+
+  for (const documentId of DOCUMENT_IDS) {
+    publicationDocuments[documentId] = {
+      edition: currentPublication.edition,
+      revisionId: documentStates[documentId].revisionId,
+      updatedAt: currentPublication.publishedAt,
+      changeCount: documentStates[documentId].changeCount,
+      summary: documentStates[documentId].summary
+    };
+  }
 
   return {
     history,
     publication: {
-      generatedAt: history.generatedAt,
+      edition: currentPublication.edition,
+      revisionId: currentPublication.revisionId,
+      updatedAt: currentPublication.publishedAt,
+      generatedAt: currentPublication.publishedAt,
       sourceRevision: nextData.meta.sourceRevision,
+      changedDocuments: currentPublication.changedDocuments || [],
+      summary: currentPublication.summary,
       documents: publicationDocuments
     },
     snapshots
   };
 }
-
 module.exports = {
   DOCUMENT_IDS,
   buildHistory,

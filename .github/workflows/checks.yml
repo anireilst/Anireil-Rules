@@ -30,10 +30,6 @@ jobs:
           fetch-depth: 1
           sparse-checkout: rules
 
-      - name: Verify the archive matches the official source
-        if: ${{ env.BOT_REPO_READ_TOKEN != '' }}
-        run: npm run sync:check
-
       - name: Explain skipped private source check
         if: ${{ env.BOT_REPO_READ_TOKEN == '' }}
         run: echo "::notice::Set the BOT_REPO_READ_TOKEN repository secret to enable private source synchronization checks."
@@ -43,8 +39,16 @@ jobs:
         with:
           node-version: 24
 
+      - name: Generate the current archive before validation
+        if: ${{ env.BOT_REPO_READ_TOKEN != '' }}
+        run: npm run sync
+
       - name: Run regression tests
         run: npm test
 
       - name: Check JavaScript syntax
         run: npm run check
+
+      - name: Verify the generated archive matches the official source
+        if: ${{ env.BOT_REPO_READ_TOKEN != '' }}
+        run: npm run sync:check
