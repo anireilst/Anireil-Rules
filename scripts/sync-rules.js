@@ -150,7 +150,13 @@ function buildSnapshot(existingData) {
     }
   };
 
-  const revision = hashSnapshot(JSON.stringify(documents));
+  const prohibitionCategories = clone(publication.categoryTitles);
+  const prohibitionSeverity = clone(publication.severityLabels);
+  const revision = hashSnapshot(JSON.stringify({
+    documents,
+    prohibitionCategories,
+    prohibitionSeverity
+  }));
 
   const meta = clone(existingData.meta);
   // Public editions belong to the complete rules suite, never to individual files.
@@ -162,8 +168,8 @@ function buildSnapshot(existingData) {
   meta.sourceRepository = 'anireilst/Anireil-Bot';
   meta.sourceRef = 'main';
   meta.sourceRevision = revision;
-  meta.prohibitionCategories = clone(publication.categoryTitles);
-  meta.prohibitionSeverity = clone(publication.severityLabels);
+  meta.prohibitionCategories = prohibitionCategories;
+  meta.prohibitionSeverity = prohibitionSeverity;
 
   return {
     meta,
