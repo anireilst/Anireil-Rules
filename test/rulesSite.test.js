@@ -131,16 +131,19 @@ test('Rules typography keeps articles readable and visually hierarchical', () =>
 
 
 
-test('Rules archive includes the source sync contract and scheduled workflow', () => {
+test('Rules archive syncs source changes and delegates Pages deployment once', () => {
   const syncScript = fs.readFileSync(path.join(root, 'scripts', 'sync-rules.js'), 'utf8');
   const syncWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'sync.yml'), 'utf8');
+  const pagesWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'pages.yml'), 'utf8');
   const checksWorkflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'checks.yml'), 'utf8');
 
   assert.match(syncScript, /publicationData/);
   assert.match(syncScript, /sourceRevision/);
   assert.match(syncWorkflow, /schedule:/);
   assert.match(syncWorkflow, /workflow_dispatch/);
-  assert.match(syncWorkflow, /actions\/deploy-pages@v4/);
+  assert.ok(!syncWorkflow.includes('actions/deploy-pages@v4'));
+  assert.match(pagesWorkflow, /push:[\s\S]*?branches:\s*\[main\]/);
+  assert.match(pagesWorkflow, /actions\/deploy-pages@v4/);
   assert.match(checksWorkflow, /anireilst\/Anireil-Bot/);
   assert.match(checksWorkflow, /sync:check/);
 });
