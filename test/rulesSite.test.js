@@ -144,6 +144,7 @@ test('Rules archive syncs source changes and delegates Pages deployment once', (
   assert.match(historyScript, /edition: currentPublication\.edition/);
   assert.match(syncScript, /sourceRevision/);
   assert.match(syncScript, /getRulesPublicationDate/);
+  assert.match(syncScript, /delete sharedDocument\.version/);
   assert.match(syncWorkflow, /fetch-depth: 0/);
   assert.match(syncWorkflow, /schedule:/);
   assert.match(syncWorkflow, /workflow_dispatch/);
