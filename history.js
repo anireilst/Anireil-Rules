@@ -115,10 +115,14 @@ function renderChanges(panel, revision) {
   panel.replaceChildren();
 
   if (!revision.changes || !revision.changes.length) {
+    const emptyMessage = revision.edition === 1
+      ? 'Это первая общая редакция правил Anireil. Предыдущие архивные редакции не сохранялись.'
+      : 'Содержание этого документа не менялось. Он включён в общую редакцию вместе с остальными документами.';
+
     panel.append(createElement(
       'p',
       'history-empty-changes',
-      'Это первая сохранённая редакция документа. Предыдущие версии не архивировались.'
+      emptyMessage
     ));
     return;
   }
