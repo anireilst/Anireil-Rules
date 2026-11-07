@@ -148,6 +148,8 @@ test('Rules archive syncs source changes and delegates Pages deployment once', (
   assert.match(syncScript, /prohibitionCategories,\s*prohibitionSeverity/);
   assert.match(syncWorkflow, /fetch-depth: 0/);
   assert.match(syncWorkflow, /schedule:/);
+  assert.match(syncWorkflow, /push:\s*\n\s*branches: \[main\]/);
+  assert.match(syncWorkflow, /'\.github\/workflows\/sync\.yml'/);
   assert.match(syncWorkflow, /workflow_dispatch/);
   assert.ok(!syncWorkflow.includes('actions/deploy-pages@v4'));
   assert.match(pagesWorkflow, /push:[\s\S]*?branches:\s*\[main\]/);
