@@ -1,6 +1,13 @@
 name: Sync official Anireil rules
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync.yml'
+      - 'scripts/rules-history.js'
+      - 'scripts/sync-rules.js'
+      - 'package.json'
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
