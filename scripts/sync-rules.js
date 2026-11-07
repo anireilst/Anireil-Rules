@@ -153,6 +153,12 @@ function buildSnapshot(existingData) {
   const revision = hashSnapshot(JSON.stringify(documents));
 
   const meta = clone(existingData.meta);
+  // Public editions belong to the complete rules suite, never to individual files.
+  meta.documents = meta.documents.map(function (document) {
+    const sharedDocument = { ...document };
+    delete sharedDocument.version;
+    return sharedDocument;
+  });
   meta.sourceRepository = 'anireilst/Anireil-Bot';
   meta.sourceRef = 'main';
   meta.sourceRevision = revision;
