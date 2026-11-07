@@ -66,8 +66,10 @@ test('initial history creates the first immutable edition for every document', (
   const publishedAt = '2026-11-01T10:00:00.000Z';
   const result = buildHistory(null, rules, rules, publishedAt);
 
-  assert.equal(result.history.schemaVersion, 1);
+  assert.equal(result.history.schemaVersion, 2);
   assert.equal(result.history.generatedAt, publishedAt);
+  assert.equal(result.history.publication.edition, 1);
+  assert.equal(result.history.publication.publishedAt, publishedAt);
 
   for (const id of ['constitution', 'codex', 'prohibitions']) {
     const revisions = result.history.documents[id].revisions;
@@ -77,6 +79,7 @@ test('initial history creates the first immutable edition for every document', (
     assert.match(revisions[0].snapshot, new RegExp('snapshots/' + id + '/edition-1-'));
     assert.ok(result.snapshots[revisions[0].snapshot]);
     assert.equal(result.publication.documents[id].edition, 1);
+    assert.equal(result.publication.documents[id].updatedAt, publishedAt);
   }
 });
 
@@ -157,10 +160,70 @@ test('document changes create a new edition and preserve the previous snapshot',
   assert.equal(modified.before.article.text, 'Исходный текст.');
   assert.equal(modified.after.article.text, 'Новый текст статьи.');
 
-  assert.equal(result.history.documents.codex.revisions.length, 1);
-  assert.equal(result.history.documents.prohibitions.revisions.length, 1);
-  assert.equal(result.publication.documents.constitution.edition, 2);
-  assert.equal(result.publication.documents.codex.edition, 1);
+  for (const id of ['constitution', 'codex', 'prohibitions']) {
+    assert.equal(result.history.documents[id].revisions.length, 2);
+    assert.equal(result.history.documents[id].revisions[0].edition, 2);
+    assert.equal(result.history.documents[id].revisions[0].publishedAt, '2026-11-03T10:00:00.000Z');
+    assert.equal(result.publication.documents[id].edition, 2);
+    assert.equal(result.publication.documents[id].updatedAt, '2026-11-03T10:00:00.000Z');
+  }
+
+  assert.equal(result.publication.edition, 2);
+  assert.deepEqual(result.publication.changedDocuments, ['constitution']);
+  assert.equal(result.history.documents.codex.revisions[0].changeCount, 0);
+  assert.equal(result.history.documents.prohibitions.revisions[0].changeCount, 0);
+});
+
+
+test('a change in one document advances the shared edition and date for the entire rules suite', () => {
+  const previous = makeRules();
+  const first = buildHistory(null, previous, previous, '2026-11-01T10:00:00.000Z');
+  const next = clone(previous);
+  next.meta.sourceRevision = 'source-two';
+  next.codex[0].articles[0].text = 'Изменённое положение Кодекса.';
+
+  const result = buildHistory(
+    first.history,
+    previous,
+    next,
+    '2026-11-06T18:30:00.000Z'
+  );
+
+  assert.equal(result.publication.edition, 2);
+  assert.equal(result.publication.updatedAt, '2026-11-06T18:30:00.000Z');
+  assert.deepEqual(result.publication.changedDocuments, ['codex']);
+
+  for (const id of ['constitution', 'codex', 'prohibitions']) {
+    assert.equal(result.publication.documents[id].edition, 2);
+    assert.equal(result.publication.documents[id].updatedAt, '2026-11-06T18:30:00.000Z');
+    assert.equal(result.history.documents[id].revisions[0].edition, 2);
+  }
+
+  assert.equal(result.history.documents.constitution.revisions[0].changeCount, 0);
+  assert.equal(result.history.documents.prohibitions.revisions[0].changeCount, 0);
+  assert.equal(result.history.documents.codex.revisions[0].changeCount, 1);
+});
+
+test('an unchanged synchronization does not advance the shared edition or publication date', () => {
+  const previous = makeRules();
+  const first = buildHistory(null, previous, previous, '2026-11-01T10:00:00.000Z');
+  const next = clone(previous);
+  next.meta.sourceRevision = 'new-source-checkout';
+
+  const result = buildHistory(
+    first.history,
+    previous,
+    next,
+    '2026-11-07T09:00:00.000Z'
+  );
+
+  assert.equal(result.publication.edition, 1);
+  assert.equal(result.publication.updatedAt, '2026-11-01T10:00:00.000Z');
+  assert.deepEqual(result.publication.changedDocuments, []);
+  for (const id of ['constitution', 'codex', 'prohibitions']) {
+    assert.equal(result.publication.documents[id].edition, 1);
+    assert.equal(result.publication.documents[id].updatedAt, '2026-11-01T10:00:00.000Z');
+  }
 });
 
 test('article comparison includes the prohibition preamble and classification metadata', () => {
