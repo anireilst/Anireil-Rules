@@ -40,7 +40,7 @@ jobs:
           path: source-bot
           token: ${{ secrets.BOT_REPO_READ_TOKEN }}
           persist-credentials: false
-          fetch-depth: 1
+          fetch-depth: 0
           sparse-checkout: rules
 
       - name: Setup Node
