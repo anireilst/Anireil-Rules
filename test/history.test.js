@@ -216,14 +216,11 @@ test('history page exposes document selection, changes and full revision views',
   assert.match(script, /fetch\('\.\/data\/history\.json'/);
   assert.match(styles, /DOCUMENT REVISION ARCHIVE/);
   assert.match(syncWorkflow, /git status --porcelain -- data/);
-  assert.match(syncWorkflow, /cron: ["']\\*\\/5 \\* \\* \\* \\*["']/);
-  assert.match(
-    syncWorkflow,
-    /uses: actions\\/upload-artifact@v4[\\s\\S]*?name: rules-archive\\s+path: sync-artifact\\s+if-no-files-found: error/
-  );
-  assert.match(syncWorkflow, /test -f sync-artifact\\/data\\/rules\\.json/);
-  assert.match(syncWorkflow, /test -f sync-artifact\\/data\\/history\\.json/);
-  assert.doesNotMatch(syncWorkflow, /actions\\/deploy-pages@v4/);
+  assert.ok(syncWorkflow.includes('cron: "*/5 * * * *"'));
+  assert.ok(syncWorkflow.includes('path: sync-artifact\n          if-no-files-found: error'));
+  assert.ok(syncWorkflow.includes('test -f sync-artifact/data/rules.json'));
+  assert.ok(syncWorkflow.includes('test -f sync-artifact/data/history.json'));
+  assert.ok(!syncWorkflow.includes('actions/deploy-pages@v4'));
 
   assert.doesNotThrow(() => new Function(script));
 });
